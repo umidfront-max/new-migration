@@ -19,7 +19,7 @@ const regions = db.regions
 const sosEvents = db.sosEvents
 const purposes = db.purposes
 
-const { state, selectCountry } = useApp()
+const { state, selectCountry, setRegion } = useApp()
 const sortKey = ref('total')
 const mode = ref('geo') // geo | schema
 
@@ -78,7 +78,8 @@ const edit = (collection, row) => {
           />
           <FlowMap
             v-else key="schema"
-            :countries="countries" :selected="state.country" @select="pick"
+            :countries="countries" :selected="state.country"
+            @select="pick" @region="setRegion"
           />
         </Transition>
       </div>

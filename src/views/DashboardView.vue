@@ -42,7 +42,7 @@ const edit = (c, row) => {
 }
 
 const router = useRouter()
-const { state, selectCountry } = useApp()
+const { state, selectCountry, setRegion } = useApp()
 
 const topRegions = computed(() =>
   regions.slice(0, 8).map((r) => ({ name: r.name, value: r.out, value2: r.back, risk: r.risk })),
@@ -85,7 +85,8 @@ const violationTotal = computed(() => violations.reduce((a, b) => a + b.value, 0
         </button>
       </template>
       <div class="mapWrap">
-        <FlowMap :countries="countries" :selected="state.country" @select="selectCountry" />
+        <FlowMap :countries="countries" :selected="state.country"
+                 @select="selectCountry" @region="setRegion" />
       </div>
     </PanelCard>
 

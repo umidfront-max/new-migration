@@ -7,15 +7,49 @@
 import { computed, ref } from 'vue'
 import { useMotionOk } from '@/composables/useMotion'
 import { fmt, short } from '@/composables/useCountUp'
+import { db } from '@/stores/db'
+import { uzOutline, uzRegions, tashkentDistricts, tashkentBox } from '@/data/uzbekistan'
 
 const props = defineProps({
   countries: { type: Array, required: true },
   selected: { type: String, default: null },
 })
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'region'])
 
 const motionOk = useMotionOk()
 const hovered = ref(null)
+const hoverRegion = ref(null)
+
+/* Chegara chizmasi bazadagi hudud ko'rsatkichlari bilan bog'lanadi */
+const regionShapes = computed(() =>
+  uzRegions.map((r) => ({ ...r, stat: db.regions.find((x) => x.name === r.name) })),
+)
+const activeRegion = computed(() =>
+  regionShapes.value.find((r) => r.name === hoverRegion.value),
+)
+
+/* ------------------------------------------- Toshkent viloyati inseti
+   Viloyat kichik bo'lgani uchun burchakda kattalashtirib ko'rsatiladi. */
+const INSET = { x: 16, y: 14, w: 182, h: 190 }
+const hoverDistrict = ref(null)
+
+const inset = computed(() => {
+  const b = tashkentBox
+  const bw = b.maxX - b.minX
+  const bh = b.maxY - b.minY
+  const pad = 16
+  const k = Math.min((INSET.w - pad * 2) / bw, (INSET.h - pad * 2 - 16) / bh)
+  const cx = INSET.x + INSET.w / 2
+  const cy = INSET.y + (INSET.h + 16) / 2
+  return {
+    k: +k.toFixed(3),
+    transform: `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${k.toFixed(3)}) ` +
+      `translate(${(-(b.minX + b.maxX) / 2).toFixed(2)} ${(-(b.minY + b.maxY) / 2).toFixed(2)})`,
+  }
+})
+
+const tashkent = computed(() => uzRegions.find((r) => r.capital))
+const tashkentStat = computed(() => db.regions.find((r) => r.name === 'Toshkent viloyati'))
 
 const W = 900
 const H = 560
@@ -141,12 +175,63 @@ const isDim = (code) => active.value && active.value !== code
         </template>
       </g>
 
-      <!-- Markaz: O'zbekiston -->
+      <!-- Markaz: O'zbekiston ma'muriy chegaralari.
+           Koordinata boshi — Toshkent viloyati markazi, oqimlar shu yerdan chiqadi -->
       <circle :cx="CX" :cy="CY" r="86" fill="url(#coreGlow)" class="pulseCore" />
-      <circle :cx="CX" :cy="CY" r="26" class="core" />
-      <circle :cx="CX" :cy="CY" r="26" class="coreRing" />
-      <text :x="CX" :y="CY + 4" class="coreTxt">UZ</text>
-      <text :x="CX" :y="CY + 48" class="coreLbl">O‘ZBEKISTON</text>
+
+      <g class="uz" :transform="`translate(${CX} ${CY})`">
+        <!-- davlat silueti -->
+        <path :d="uzOutline" class="uzFill" />
+
+        <!-- viloyatlar -->
+        <path
+          v-for="r in regionShapes" :key="r.name" :d="r.d"
+          class="rg" :class="{ cap: r.capital, on: hoverRegion === r.name }"
+          @mouseenter="hoverRegion = r.name" @mouseleave="hoverRegion = null"
+          @click.stop="emit('region', r.name)"
+        />
+
+        <!-- Toshkent viloyati tumanlari -->
+        <g class="dst">
+          <path v-for="d in tashkentDistricts" :key="d.name" :d="d.d">
+            <title>{{ d.name }} tumani</title>
+          </path>
+        </g>
+
+        <!-- davlat konturi eng ustida -->
+        <path :d="uzOutline" class="uzLine" />
+
+        <!-- oqimlarning boshlanish nuqtasi -->
+        <circle r="7" class="origin" />
+        <circle r="3.2" class="originIn" />
+      </g>
+
+      <text :x="CX" :y="CY + 26" class="coreTxt">TOSHKENT VILOYATI</text>
+      <text :x="CX - 52" :y="CY + 74" class="coreLbl">O‘ZBEKISTON</text>
+
+      <!-- Toshkent viloyati — kattalashtirilgan chizma va tumanlar -->
+      <g class="inset">
+        <rect :x="INSET.x" :y="INSET.y" :width="INSET.w" :height="INSET.h" rx="14" class="inBox" />
+        <text :x="INSET.x + 13" :y="INSET.y + 20" class="inTtl">TOSHKENT VILOYATI</text>
+        <text :x="INSET.x + INSET.w - 13" :y="INSET.y + 20" class="inK num">
+          ×{{ Math.round(inset.k) }}
+        </text>
+
+        <g :transform="inset.transform">
+          <path :d="tashkent.d" class="inFill" />
+          <path
+            v-for="d in tashkentDistricts" :key="'in' + d.name" :d="d.d"
+            class="inDst" :class="{ on: hoverDistrict === d.name }"
+            @mouseenter="hoverDistrict = d.name" @mouseleave="hoverDistrict = null"
+          />
+          <path :d="tashkent.d" class="inLine" />
+          <circle :r="(3.2 / inset.k).toFixed(2)" class="inOrigin" />
+        </g>
+
+        <text :x="INSET.x + INSET.w / 2" :y="INSET.y + INSET.h - 9" class="inFoot">
+          {{ hoverDistrict ? hoverDistrict + ' tumani' : tashkentDistricts.length + ' ta tuman' }}
+        </text>
+      </g>
 
       <!-- Tugunlar -->
       <g
@@ -178,6 +263,22 @@ const isDim = (code) => active.value && active.value !== code
       </g>
     </svg>
 
+    <!-- Hudud kartochkasi -->
+    <Transition name="tip">
+      <div v-if="activeRegion" class="rTip">
+        <p class="rTipTop">
+          {{ activeRegion.name }}
+          <span v-if="activeRegion.capital" class="rTipTag">poytaxt hududi</span>
+        </p>
+        <div v-if="activeRegion.stat" class="rTipGrid">
+          <div><span class="eyebrow">Chiqqan</span><b class="num">{{ fmt(activeRegion.stat.out) }}</b></div>
+          <div><span class="eyebrow">Qaytgan</span><b class="num">{{ fmt(activeRegion.stat.back) }}</b></div>
+          <div><span class="eyebrow">Xavf</span><b class="num">{{ activeRegion.stat.risk }}</b></div>
+        </div>
+        <p v-else class="rTipNo">Bazada ko‘rsatkich yo‘q</p>
+      </div>
+    </Transition>
+
     <!-- Tanlangan yo'nalish kartochkasi -->
     <Transition name="tip">
       <div v-if="active" class="tip">
@@ -204,6 +305,7 @@ const isDim = (code) => active.value && active.value !== code
 
     <p class="legend">
       Halqalar — Toshkentdan masofa · Aylana o‘lchami — migrantlar soni · Rang — xavf indeksi
+      <span class="src">Chegaralar: geoBoundaries / OpenStreetMap (ODbL)</span>
     </p>
   </div>
 </template>
@@ -211,6 +313,142 @@ const isDim = (code) => active.value && active.value !== code
 <style scoped>
 .wrap {
   position: relative;
+}
+
+/* ------------------------------------------------ ma'muriy chegaralar */
+.uz { pointer-events: auto; }
+
+.uzFill {
+  fill: rgba(var(--mist-rgb), 0.07);
+  stroke: none;
+}
+.uzLine {
+  fill: none;
+  stroke: var(--turk);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.rg {
+  fill: rgba(var(--mist-rgb), 0.05);
+  stroke: rgba(var(--mist-rgb), 0.34);
+  stroke-width: 0.7;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.3s var(--ease-out), stroke 0.3s var(--ease-out);
+}
+.rg:hover, .rg.on {
+  fill: rgba(var(--turk-rgb), 0.2);
+  stroke: var(--turk);
+}
+.rg.cap {
+  fill: rgba(var(--turk-rgb), 0.17);
+  stroke: var(--turk);
+  stroke-width: 1;
+}
+.rg.cap:hover, .rg.cap.on { fill: rgba(var(--turk-rgb), 0.3); }
+
+.dst path {
+  fill: none;
+  stroke: rgba(var(--turk-rgb), 0.5);
+  stroke-width: 0.45;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.origin {
+  fill: none;
+  stroke: var(--saffron);
+  stroke-width: 1.4;
+  opacity: 0.9;
+  pointer-events: none;
+  transform-origin: center;
+  animation: pulse-ring 2.8s var(--ease-out) infinite;
+}
+.originIn { fill: var(--saffron); pointer-events: none; }
+
+/* ------------------------------------ Toshkent viloyati inseti */
+.inBox {
+  fill: rgba(var(--deep-rgb), 0.72);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.inTtl {
+  fill: var(--turk);
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.inK { fill: var(--mist-dim); font-size: 9px; text-anchor: end; }
+
+.inFill { fill: rgba(var(--turk-rgb), 0.1); stroke: none; }
+.inLine {
+  fill: none;
+  stroke: var(--turk);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.inDst {
+  fill: rgba(var(--turk-rgb), 0.06);
+  stroke: rgba(var(--turk-rgb), 0.55);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: fill 0.25s var(--ease-out);
+}
+.inDst:hover, .inDst.on { fill: rgba(var(--turk-rgb), 0.38); }
+.inOrigin { fill: var(--saffron); pointer-events: none; }
+.inFoot {
+  fill: var(--mist);
+  font-size: 9.5px;
+  text-anchor: middle;
+}
+
+/* hudud kartochkasi */
+.rTip {
+  position: absolute;
+  left: 18px;
+  bottom: 54px;
+  z-index: 3;
+  padding: 12px 15px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--turk);
+  background: var(--surface-2);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-lift);
+  pointer-events: none;
+}
+.rTipTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 9px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.rTipTag {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--turk-dim);
+  font-size: 10px;
+  color: var(--turk);
+}
+.rTipGrid { display: flex; gap: 18px; }
+.rTipGrid > div { display: grid; gap: 2px; }
+.rTipGrid b { font-size: 13px; }
+.rTipNo { margin: 0; font-size: 11.5px; color: var(--mist-dim); }
+
+.src {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 .map {
@@ -257,25 +495,18 @@ const isDim = (code) => active.value && active.value !== code
   50% { opacity: 0.95; transform: scale(1.14); }
 }
 
-.core {
-  fill: var(--ink-900);
-  stroke: var(--turk);
-  stroke-width: 1.5;
-}
-.coreRing {
-  fill: none;
-  stroke: var(--turk);
-  stroke-width: 1;
-  opacity: 0.5;
-  transform-origin: center;
-  animation: pulse-ring 3.2s var(--ease-out) infinite;
-}
 .coreTxt {
-  fill: var(--turk);
+  fill: var(--saffron);
   font-family: var(--font-data);
-  font-size: 15px;
+  font-size: 9px;
   font-weight: 700;
+  letter-spacing: 0.16em;
   text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--ink-900);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 .coreLbl {
   fill: var(--mist-dim);
