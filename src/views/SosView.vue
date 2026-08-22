@@ -6,9 +6,9 @@ import SosFeed from '@/components/panels/SosFeed.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, serie } from '@/stores/db'
+import { db, exportCollection, resolveSosEvent, serie } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { months } from '@/data/mock'
+import { months } from '@/data/labels'
 import AreaTrend from '@/components/charts/AreaTrend.vue'
 
 const sosEvents = db.sosEvents
@@ -17,7 +17,15 @@ const sosStats = db.sosStats
 
 /* Qo'shish / tahrirlash */
 const target = ref('sosEvents')
-const { modal, editing, flash, openEdit, close, onSaved, onRemoved } = useRecordModal()
+const { modal, editing, flash, openEdit, close, onSaved, onRemoved, run } = useRecordModal()
+
+/** Murojaatni yopish */
+const resolve = (event) =>
+  run(() => resolveSosEvent(event), `${event.id} — murojaat yopildi`)
+
+/** Jurnalga CSV eksport */
+const exportLog = () =>
+  run(() => exportCollection('sosEvents'), 'SOS jurnali yuklab olindi')
 const add = (c) => {
   target.value = c
   editing.value = null
@@ -57,7 +65,9 @@ const sosTrend = computed(() => [serie('sos')].filter(Boolean))
                  hint="Telefon raqami va lokatsiya migrant tomonidan taqdim etiladi"
                  glow="coral" class="enter" :style="{ '--i': 4 }">
         <template #actions>
-          <button class="v-btn"><AppIcon name="export" :size="14" /> Jurnalga</button>
+          <button class="v-btn" @click="exportLog">
+            <AppIcon name="export" :size="14" /> Jurnalga
+          </button>
           <button class="v-btn add" @click="openAdd">
             <AppIcon name="plus" :size="14" /> Murojaat qo‘shish
           </button>
@@ -67,7 +77,8 @@ const sosTrend = computed(() => [serie('sos')].filter(Boolean))
           <p v-if="flash" class="v-flash"><AppIcon name="shield" :size="13" /> {{ flash }}</p>
         </Transition>
 
-        <SosFeed :limit="10" editable @edit="edit('sosEvents', $event)" />
+        <SosFeed :limit="10" editable
+                 @edit="edit('sosEvents', $event)" @resolve="resolve" />
       </PanelCard>
 
       <div class="side">

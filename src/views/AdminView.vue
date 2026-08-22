@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, resetCollection } from '@/stores/db'
+import { db, patchRecord, refreshAll, status } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -13,7 +13,7 @@ const toggles = db.settings
 
 /* Qo'shish / tahrirlash — to'plam tanlanadi */
 const target = ref('roles')
-const { modal, editing, flash, openEdit, close, onSaved, onRemoved, say } = useRecordModal()
+const { modal, editing, flash, openEdit, close, onSaved, onRemoved, say, run } = useRecordModal()
 const add = (c) => {
   target.value = c
   editing.value = null
@@ -25,13 +25,18 @@ const edit = (c, row) => {
 }
 const openAdd = () => add('roles')
 
-/* Demo ma'lumotlarni boshlang'ich holatga qaytarish */
-const askReset = ref(false)
-const doReset = () => {
-  resetCollection()
-  askReset.value = false
-  say('Barcha to‘plamlar demo holatiga qaytarildi')
+/* Serverdan qayta yuklash */
+const doRefresh = async () => {
+  await refreshAll().catch(() => {})
+  say(status.error ? `Yangilab bo‘lmadi: ${status.error}` : 'Ma’lumot serverdan yangilandi')
 }
+
+/** Sozlama kalitchasi — o'zgarish serverga yoziladi */
+const toggleSetting = (item) =>
+  run(
+    () => patchRecord('settings', item, { on: !item.on }),
+    `${item.label} — ${item.on ? 'o‘chirildi' : 'yoqildi'}`,
+  )
 
 </script>
 
@@ -87,7 +92,7 @@ const doReset = () => {
           </div>
           <span class="tgR">
             <b v-if="t.kind === 'number'" class="num tgV">{{ t.value }}</b>
-            <button v-else class="sw" :class="{ on: t.on }" @click="t.on = !t.on"
+            <button v-else class="sw" :class="{ on: t.on }" @click="toggleSetting(t)"
                     :aria-pressed="t.on" :aria-label="t.label">
               <span />
             </button>
@@ -115,24 +120,21 @@ const doReset = () => {
       </div>
     </PanelCard>
 
-    <PanelCard eyebrow="Ma’lumotlar bazasi" title="Demo yozuvlarni tiklash"
-               hint="Qo‘shilgan va tahrirlangan barcha yozuvlar brauzer xotirasida saqlanadi"
+    <PanelCard eyebrow="Ma’lumotlar bazasi" title="Serverdan yangilash"
+               hint="Barcha yozuvlar backend bazasida saqlanadi — brauzerda hech narsa turmaydi"
                class="enter" :style="{ '--i': 3 }">
       <div class="rst">
         <p class="v-note">
-          Migrantlar, davlatlar, hududlar, ish beruvchilar, punktlar, rollar, qonunbuzilish
-          turlari va SOS murojaatlari — hammasi shu yerdan boshlang‘ich demo holatiga qaytariladi.
+          Boshqa foydalanuvchi kiritgan o‘zgarishlarni ko‘rish uchun barcha
+          to‘plamlarni serverdan qayta o‘qish mumkin.
+          <span v-if="status.loadedAt" class="stamp num">
+            Oxirgi yangilanish: {{ new Date(status.loadedAt).toLocaleTimeString('ru-RU') }}
+          </span>
         </p>
-        <template v-if="!askReset">
-          <button class="v-btn" @click="askReset = true">
-            <AppIcon name="refresh" :size="14" /> Tiklash
-          </button>
-        </template>
-        <template v-else>
-          <span class="ask">Barcha o‘zgarishlar yo‘qoladi. Davom etamizmi?</span>
-          <button class="v-btn dng" @click="doReset">Ha, tiklansin</button>
-          <button class="v-btn" @click="askReset = false">Bekor</button>
-        </template>
+        <button class="v-btn" :disabled="status.loading" @click="doRefresh">
+          <AppIcon name="refresh" :size="14" />
+          {{ status.loading ? 'Yuklanmoqda…' : 'Yangilash' }}
+        </button>
       </div>
     </PanelCard>
 
@@ -149,9 +151,7 @@ const doReset = () => {
 
 .rst { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .rst .v-note { flex: 1; min-width: 260px; }
-.ask { font-size: 12.5px; color: var(--saffron); }
-.v-btn.dng { color: var(--coral); border-color: rgba(var(--coral-rgb), 0.4); }
-.v-btn.dng:hover { color: var(--coral); border-color: var(--coral); background: var(--coral-dim); }
+.stamp { display: block; margin-top: 6px; font-size: 11px; color: var(--mist-dim); }
 
 .rl { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; white-space: nowrap; }
 .rl i { width: 7px; height: 7px; border-radius: 2px; background: currentColor; }

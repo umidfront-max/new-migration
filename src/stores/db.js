@@ -1,156 +1,144 @@
 /* ==========================================================================
-   Tahrirlanadigan ma'lumotlar qatlami.
-   Demo bosqichda manba — src/data/mock.js, o'zgarishlar localStorage'da saqlanadi.
-   Backend ulanganda faqat shu fayldagi restore/persist va CRUD funksiyalari
-   API chaqiruvlariga almashtiriladi — sahifalarga tegilmaydi.
+   Ma'lumotlar qatlami — backend API ustidan.
+
+   Sahifalar uchun interfeys o'zgarmadi: `db.migrants` hamon reaktiv massiv,
+   `addRecord` / `updateRecord` / `removeRecord` hamon shu nomlar bilan
+   chaqiriladi. Farqi shundaki, ular endi asinxron va serverga so'rov yuboradi.
+
+   Ma'lumot brauzerda saqlanmaydi — har bir yozuv serverdan keladi.
    ========================================================================== */
-import { reactive, watch } from 'vue'
-import * as seed from '@/data/mock'
+import { reactive, readonly } from 'vue'
 
-const KEY = 'migrant-db-v2'
+import { api, ApiError } from '@/services/api'
+import {
+  COLLECTIONS,
+  detailPath,
+  ENDPOINTS,
+  fromApi,
+  isReadOnly,
+  listParams,
+  toApi,
+} from '@/services/collections'
 
-/** Foydalanuvchi qo'sha va tahrirlay oladigan barcha to'plamlar */
-export const COLLECTIONS = [
-  /* asosiy reyestrlar */
-  'migrants', 'countries', 'regions', 'districts', 'employers',
-  'borderPoints', 'roles', 'violations', 'sosEvents',
-  /* ko'rsatkichlar va grafiklar */
-  'kpis', 'composition', 'purposes', 'series',
-  'consulate', 'returnStats', 'riskDistribution',
-  'borderStats', 'sosStats', 'auditStats',
-  /* panellar va ro'yxatlar */
-  'aiInsights', 'aiSuggestions', 'integrations', 'borderSources',
-  'reportTemplates', 'reportArchive', 'consulateServices',
-  'returnPrograms', 'sosChannels', 'riskWeights',
-  /* jurnal va sozlamalar */
-  'auditLog', 'settings', 'users',
-]
+export { COLLECTIONS, isReadOnly, ApiError }
 
-const clone = (v) => JSON.parse(JSON.stringify(v))
+/** Barcha to'plamlar — boshida bo'sh, `loadAll()` dan keyin to'ladi */
+export const db = reactive(Object.fromEntries(COLLECTIONS.map((name) => [name, []])))
 
-let _seq = Date.now()
-export const uid = () => `r${(_seq++).toString(36)}`
+const state = reactive({
+  loading: false,
+  ready: false,
+  error: null,
+  loadedAt: null,
+})
 
-/** Har bir yozuvga barqaror _id beriladi — tahrir va o'chirish shu bo'yicha ishlaydi */
-const stamp = (rows) => rows.map((r) => (r._id ? r : { ...r, _id: uid() }))
+/** Yuklanish holati — sahifalar shu bo'yicha ekran ko'rsatadi */
+export const status = readonly(state)
 
-const restore = () => {
-  try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
+/** Jurnalda ko'rinadigan joriy foydalanuvchi (auth store to'ldiradi) */
+export const actor = reactive({ user: 'mehmon', role: '—' })
+
+/* ------------------------------------------------------------- yuklash */
+
+let inflight = null
+
+/** Bitta to'plamni serverdan qayta o'qiydi */
+export async function loadCollection(name, signal) {
+  const rows = await api.list(ENDPOINTS[name].path, listParams(name), signal)
+  db[name].splice(0, db[name].length, ...rows.map((row) => fromApi(name, row)))
+  return db[name]
 }
-
-const saved = restore()
-
-/* Yozuvni tanib olish uchun tabiiy kalitlar — migratsiya shu bo'yicha bog'laydi */
-const NATURAL = ['code', 'login', 'key', 'name', 'label']
 
 /**
- * Saqlangan yozuvlarga sxemaga yangi qo'shilgan maydonlarni to'ldiradi.
- * Foydalanuvchi kiritgan qiymatlar hamisha ustun turadi — faqat yetishmayotgan
- * kalitlar demo ma'lumotdan olinadi. Shu sababli yangilanishdan keyin ham
- * eski tahrirlar saqlanib qoladi.
+ * Ro'yxatni cheklangan oqim bilan bajaradi.
+ *
+ * Brauzer bitta hostga 6 ta ulanish ochadi, dev serveri esa o'nlab
+ * bir vaqtdagi so'rovda ulanishni uzib yuboradi — shuning uchun
+ * to'plamlar to'da-to'da yuklanadi.
  */
-const hydrate = (rows, seedRows) => {
-  if (!Array.isArray(seedRows)) return rows
-  const key = NATURAL.find((k) => seedRows.every((r) => r[k] !== undefined))
-  return rows.map((row) => {
-    const match = key ? seedRows.find((r) => r[key] === row[key]) : null
-    return match ? { ...match, ...row } : row
+async function runPooled(items, worker, limit = 6) {
+  const queue = [...items]
+  const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+    while (queue.length) {
+      await worker(queue.shift())
+    }
   })
+  await Promise.all(workers)
 }
 
-export const db = reactive(
-  Object.fromEntries(
-    COLLECTIONS.map((n) => [
-      n,
-      stamp(Array.isArray(saved[n]) ? hydrate(saved[n], seed[n]) : clone(seed[n])),
-    ]),
-  ),
-)
+/**
+ * Barcha to'plamlarni yuklaydi.
+ * Bir vaqtda bir nechta chaqiruv bo'lsa — bittasi bajariladi.
+ */
+export function loadAll({ force = false } = {}) {
+  if (inflight && !force) return inflight
+  if (state.ready && !force) return Promise.resolve(db)
 
-/* Har qanday o'zgarish avtomatik saqlanadi (debounce) */
-let timer = null
-watch(
-  db,
-  () => {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
-      try {
-        localStorage.setItem(KEY, JSON.stringify(db))
-      } catch { /* kvota to'lgan — jimgina o'tkazamiz */ }
-    }, 300)
-  },
-  { deep: true },
-)
+  state.loading = true
+  state.error = null
 
-/* ------------------------------------------------------------ audit jurnali */
+  inflight = runPooled(COLLECTIONS, (name) => loadCollection(name))
+    .then(() => {
+      state.ready = true
+      state.loadedAt = new Date().toISOString()
+      return db
+    })
+    .catch((error) => {
+      state.error = error instanceof ApiError ? error.message : String(error)
+      throw error
+    })
+    .finally(() => {
+      state.loading = false
+      inflight = null
+    })
 
-/** Jurnalda ko'rinadigan joriy foydalanuvchi */
-export const actor = reactive({ user: 'admin.root', role: 'Super administrator' })
-
-const LABELS = {
-  migrants: 'Reyestr yozuvi', countries: 'Davlat', regions: 'Hudud', districts: 'Tuman',
-  employers: 'Ish beruvchi', borderPoints: 'O‘tkazish punkti', roles: 'Rol',
-  violations: 'Qonunbuzilish turi', sosEvents: 'SOS murojaat',
-  kpis: 'KPI', composition: 'Tarkib ko‘rsatkichi', purposes: 'Chiqish maqsadi',
-  series: 'Grafik qatori', consulate: 'Konsullik KPI', returnStats: 'Qaytish KPI',
-  riskDistribution: 'Xavf taqsimoti', aiInsights: 'AI insayt', aiSuggestions: 'AI savol',
-  borderStats: 'Chegara KPI', sosStats: 'SOS KPI', auditStats: 'Audit KPI',
-  integrations: 'Integratsiya', borderSources: 'Ma’lumot manbai',
-  reportTemplates: 'Hisobot shabloni', reportArchive: 'Arxiv yozuvi',
-  consulateServices: 'Konsullik xizmati', returnPrograms: 'Reintegratsiya dasturi',
-  sosChannels: 'SOS kanali', riskWeights: 'Model omili', settings: 'Sozlama',
-  users: 'Foydalanuvchi',
+  return inflight
 }
 
-const VERBS = { add: 'qo‘shildi', edit: 'o‘zgartirildi', remove: 'o‘chirildi' }
-
-/** CRUD amallarini audit jurnaliga yozadi (jurnalning o'zi yozilmaydi) */
-function trace(collection, verb) {
-  if (collection === 'auditLog') return
-  const d = new Date()
-  db.auditLog.unshift({
-    _id: uid(),
-    id: (db.auditLog[0]?.id ?? 4820) + 1,
-    user: actor.user,
-    role: actor.role,
-    action: `${LABELS[collection] || collection} ${VERBS[verb]}`,
-    ip: '92.63.14.7',
-    at: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
-    ok: true,
-  })
-  if (db.auditLog.length > 200) db.auditLog.length = 200
+/** Kirish/chiqishda ma'lumotni tozalaydi */
+export function clearAll() {
+  COLLECTIONS.forEach((name) => db[name].splice(0, db[name].length))
+  state.ready = false
+  state.error = null
+  state.loadedAt = null
 }
 
 /* ---------------------------------------------------------------- CRUD */
 
-/** Yangi yozuv qo'shadi va uni qaytaradi */
-export function addRecord(name, data) {
-  const rec = { ...data, _id: uid() }
-  db[name].unshift(rec)
-  trace(name, 'add')
-  return rec
+const ensureWritable = (name) => {
+  if (isReadOnly(name)) {
+    throw new ApiError(`"${name}" faqat o‘qish uchun — yozuv qo‘shib bo‘lmaydi`, { status: 405 })
+  }
 }
 
-/** Mavjud yozuvni yangilaydi (_id bo'yicha topib) */
-export function updateRecord(name, id, data) {
-  const row = db[name].find((r) => r._id === id)
-  if (!row) return null
-  Object.assign(row, data)
-  trace(name, 'edit')
-  return row
+/** Yangi yozuv qo'shadi */
+export async function addRecord(name, data) {
+  ensureWritable(name)
+  const created = fromApi(name, await api.post(ENDPOINTS[name].path, toApi(name, data)))
+  db[name].unshift(created)
+  return created
 }
 
-/** _id bo'yicha o'chiradi */
-export function removeRecord(name, id) {
-  const i = db[name].findIndex((r) => r._id === id)
-  if (i === -1) return false
-  db[name].splice(i, 1)
-  trace(name, 'remove')
+/** Mavjud yozuvni yangilaydi */
+export async function updateRecord(name, id, data) {
+  ensureWritable(name)
+  const index = db[name].findIndex((row) => row._id === String(id))
+  if (index === -1) return null
+
+  const path = detailPath(name, db[name][index])
+  const updated = fromApi(name, await api.patch(path, toApi(name, data)))
+  db[name].splice(index, 1, updated)
+  return updated
+}
+
+/** Yozuvni o'chiradi */
+export async function removeRecord(name, id) {
+  ensureWritable(name)
+  const index = db[name].findIndex((row) => row._id === String(id))
+  if (index === -1) return false
+
+  await api.delete(detailPath(name, db[name][index]))
+  db[name].splice(index, 1)
   return true
 }
 
@@ -159,25 +147,64 @@ export function saveRecord(name, id, data) {
   return id ? updateRecord(name, id, data) : addRecord(name, data)
 }
 
-/** To'plamni (yoki hammasini) demo holatiga qaytaradi */
-export function resetCollection(name) {
-  const list = name ? [name] : COLLECTIONS
-  list.forEach((n) => db[n].splice(0, db[n].length, ...stamp(clone(seed[n]))))
+/**
+ * Bitta maydonni tezkor o'zgartirish — jadvaldagi tugmalar uchun.
+ * Butun formani ochmasdan serverga PATCH yuboradi.
+ */
+export function patchRecord(name, record, changes) {
+  return updateRecord(name, record._id, changes)
+}
+
+/** Serverdan qayta o'qish — "yangilash" tugmasi uchun */
+export function refreshAll() {
+  return loadAll({ force: true })
+}
+
+/* --------------------------------------- resurslardagi qo'shimcha amallar */
+
+const replaceRow = (name, updated) => {
+  const index = db[name].findIndex((row) => row._id === updated._id)
+  if (index > -1) db[name].splice(index, 1, updated)
+  return updated
+}
+
+/** SOS murojaatni yopadi */
+export async function resolveSosEvent(record) {
+  const path = `${detailPath('sosEvents', record)}resolve/`
+  return replaceRow('sosEvents', fromApi('sosEvents', await api.post(path)))
+}
+
+/** Yopilgan SOS murojaatni qayta ochadi */
+export async function reopenSosEvent(record) {
+  const path = `${detailPath('sosEvents', record)}reopen/`
+  return replaceRow('sosEvents', fromApi('sosEvents', await api.post(path)))
+}
+
+/** Hisobot shablonidan arxivga yozuv shakllantiradi */
+export async function generateReport(template) {
+  const result = await api.post(`${detailPath('reportTemplates', template)}generate/`)
+  await loadCollection('reportArchive')
+  return result
+}
+
+/** CSV eksport — brauzerda yuklab olishni boshlaydi */
+export async function exportCollection(name, params = {}) {
+  const { blob, filename } = await api.download(`${ENDPOINTS[name].path}export/`, params)
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+  return filename
 }
 
 /* ----------------------------------------------------- qulay qisqartmalar */
 
 /** Sozlamani kalit bo'yicha o'qish: setting('overallRisk') */
-export const setting = (key) => db.settings.find((s) => s.key === key)
+export const setting = (key) => db.settings.find((row) => row.key === key)
 
 /** Grafik qatorini kalit bo'yicha o'qish: serie('out') */
-export const serie = (key) => db.series.find((s) => s.key === key)
-
-export const migrants = db.migrants
-export const countries = db.countries
-export const regions = db.regions
-export const employers = db.employers
-export const borderPoints = db.borderPoints
-export const roles = db.roles
-export const violations = db.violations
-export const sosEvents = db.sosEvents
+export const serie = (key) => db.series.find((row) => row.key === key)

@@ -143,3 +143,29 @@ barcha animatsiyalar o'chadi, zarrachalar render qilinmaydi.
 Interfeys o'zbek tilida (lotin). Ko'p tilli qilish uchun matnlarni
 `vue-i18n` lug'atiga ko'chirish kerak — hozir ular komponentlar ichida.
 # new-migration
+
+
+## Backend bilan ishlash
+
+Ilova barcha ma'lumotni Django API'dan oladi — brauzerda hech narsa saqlanmaydi
+(faqat kirish tokeni va mavzu tanlovi).
+
+```bash
+# 1. Backend (alohida repozitoriya: new-migration-backend)
+cd ../migrant-backend
+.venv/Scripts/activate
+python manage.py runserver 8000
+
+# 2. Frontend
+npm install
+npm run dev
+```
+
+API manzili `.env` orqali beriladi (`.env.example` dan nusxa oling):
+
+```
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+Kirish: `admin.root` / `demo`. Backend ishlamasa ilova "Serverga ulanib
+bo'lmadi" ekranini va qayta urinish tugmasini ko'rsatadi.

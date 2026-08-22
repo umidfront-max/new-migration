@@ -33,5 +33,20 @@ export function useRecordModal(labels = {}) {
 
   const onRemoved = () => say(labels.removed || 'Yozuv o‘chirildi')
 
-  return { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, say }
+  /**
+   * Serverga so'rov yuboradigan amalni o'raydi: xato bo'lsa xabar ko'rsatadi.
+   * Jadvaldagi tugmalar (bloklash, yopish) shu orqali ishlaydi.
+   */
+  const run = async (action, successMessage) => {
+    try {
+      const result = await action()
+      if (successMessage) say(successMessage)
+      return result
+    } catch (error) {
+      say(error?.message || 'Amalni bajarib bo‘lmadi')
+      return null
+    }
+  }
+
+  return { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, say, run }
 }

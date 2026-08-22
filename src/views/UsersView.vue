@@ -4,10 +4,9 @@ import PanelCard from '@/components/ui/PanelCard.vue'
 import StatTile from '@/components/ui/StatTile.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db } from '@/stores/db'
+import { db, patchRecord } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { useAuth, initialsOf } from '@/stores/auth'
-import { hasPassword, LEGACY_PASSWORD } from '@/composables/usePassword'
 
 const users = db.users
 const roles = db.roles
@@ -51,23 +50,23 @@ const byRole = computed(() => {
     }))
 })
 
-const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved } = useRecordModal({
-  added: 'Foydalanuvchi qo‘shildi — kiritilgan parol bilan kira oladi',
-  updated: 'Foydalanuvchi ma’lumoti yangilandi',
-  removed: 'Foydalanuvchi o‘chirildi',
-})
+const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, run } =
+  useRecordModal({
+    added: 'Foydalanuvchi qo‘shildi — kiritilgan parol bilan kira oladi',
+    updated: 'Foydalanuvchi ma’lumoti yangilandi',
+    removed: 'Foydalanuvchi o‘chirildi',
+  })
 
-const toggleStatus = (u) => {
-  u.status = u.status === 'Faol' ? 'Bloklangan' : 'Faol'
+/** Bloklash / blokdan chiqarish — serverga yuboriladi */
+const toggleStatus = (user) => {
+  const next = user.status === 'Faol' ? 'Bloklangan' : 'Faol'
+  return run(
+    () => patchRecord('users', user, { status: next }),
+    next === 'Faol' ? `${user.name} blokdan chiqarildi` : `${user.name} bloklandi`,
+  )
 }
 
-const withPassword = computed(() => users.filter(hasPassword).length)
-
-/** Parolni standart holatga qaytarish — hash o'chiriladi */
-const resetPassword = (u) => {
-  delete u.passwordHash
-  delete u.passwordSalt
-}
+const withPassword = computed(() => users.filter((u) => u.hasPassword).length)
 
 const reset = () => {
   q.value = ''
@@ -85,14 +84,14 @@ const reset = () => {
                 :delay="120" class="enter" :style="{ '--i': 1 }" />
       <StatTile label="Bloklangan" :value="blocked" tone="coral" sub="kirish taqiqlangan"
                 :delay="240" class="enter" :style="{ '--i': 2 }" />
-      <StatTile label="Standart paroldagilar" :value="users.length - withPassword" tone="saffron"
-                :sub="`parol — ${LEGACY_PASSWORD}, almashtirilishi kerak`"
-                :delay="360" class="enter" :style="{ '--i': 3 }" />
+      <StatTile label="Paroli o‘rnatilgan" :value="withPassword" tone="saffron"
+                sub="qolganlari standart parolda" :delay="360" class="enter"
+                :style="{ '--i': 3 }" />
     </div>
 
     <div class="v-2-1">
       <PanelCard eyebrow="Kirish huquqlari" title="Foydalanuvchilar"
-                 :hint="`${list.length} ta yozuv · ${withPassword} tasida o‘z paroli o‘rnatilgan`"
+                 :hint="`${list.length} ta yozuv · ${withPassword} tasida parol o‘rnatilgan`"
                  class="enter" :style="{ '--i': 4 }">
         <template #actions>
           <button class="v-btn add" @click="openAdd">
@@ -150,15 +149,11 @@ const reset = () => {
                 <td class="muted">{{ u.role }}</td>
                 <td class="muted">{{ u.unit }}</td>
                 <td>
-                  <span v-if="hasPassword(u)" class="pw set">
+                  <span v-if="u.hasPassword" class="pw set">
                     <AppIcon name="shield" :size="12" /> O‘rnatilgan
-                    <button class="pwR" title="Standart parolga qaytarish"
-                            @click="resetPassword(u)">
-                      <AppIcon name="refresh" :size="12" />
-                    </button>
                   </span>
-                  <span v-else class="pw def" :title="`Parol — ${LEGACY_PASSWORD}`">
-                    <AppIcon name="close" :size="12" /> Standart
+                  <span v-else class="pw def" title="Parol hali qo‘yilmagan">
+                    <AppIcon name="close" :size="12" /> Yo‘q
                   </span>
                 </td>
                 <td>
@@ -201,11 +196,11 @@ const reset = () => {
             <li><span class="n num">1</span> Login takrorlanmasligi kerak — u kirish identifikatori.</li>
             <li><span class="n num">2</span> Rol foydalanuvchi ko‘radigan ma’lumot ko‘lamini belgilaydi.</li>
             <li><span class="n num">3</span> Parol qo‘shish shaklida kiritiladi — kamida 6 ta belgi.
-              Ochiq saqlanmaydi: tasodifiy tuz va SHA-256 yig‘indisi yoziladi.</li>
+              Serverda Django’ning PBKDF2 hashi bilan saqlanadi, hech qachon ochiq qaytarilmaydi.</li>
             <li><span class="n num">4</span> Bloklangan hisob tizimga kira olmaydi, lekin
               audit jurnalidagi yozuvlari saqlanadi.</li>
-            <li><span class="n num">5</span> Paroli o‘rnatilmagan eski hisoblar
-              <b class="num">{{ LEGACY_PASSWORD }}</b> bilan kiradi — ularni almashtirish kerak.</li>
+            <li><span class="n num">5</span> Parolni almashtirish uchun foydalanuvchini
+              tahrirlang — bo‘sh qoldirilsa eskisi saqlanadi.</li>
           </ul>
         </PanelCard>
       </div>
@@ -321,16 +316,6 @@ html[data-theme='light'] .av { color: #fff; }
 }
 .pw.set { background: var(--turk-dim); color: var(--turk); }
 .pw.def { background: var(--saffron-dim); color: var(--saffron); }
-.pwR {
-  display: grid;
-  place-items: center;
-  margin-left: 2px;
-  color: currentColor;
-  opacity: 0.6;
-  transition: opacity 0.25s ease, transform 0.35s var(--ease-out);
-}
-.pwR:hover { opacity: 1; transform: rotate(-90deg); }
-
 .empty { padding: 30px 16px; text-align: center; font-size: 13px; color: var(--mist-dim); }
 
 /* rollar taqsimoti */

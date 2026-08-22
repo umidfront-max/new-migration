@@ -15,7 +15,7 @@ import { fmt } from '@/composables/useCountUp'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db, serie, setting } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { months } from '@/data/mock'
+import { months } from '@/data/labels'
 
 const regions = db.regions
 const violations = db.violations

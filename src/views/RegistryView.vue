@@ -4,7 +4,7 @@ import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db } from '@/stores/db'
+import { db, exportCollection } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -45,11 +45,24 @@ const reset = () => {
 }
 
 /* -------------------------------------------------- qo'shish / tahrirlash */
-const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved } = useRecordModal({
-  added: 'Yangi migrant reyestrga qo‘shildi',
-  updated: 'Ma’lumot yangilandi',
-  removed: 'Yozuv reyestrdan o‘chirildi',
-})
+const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, run } =
+  useRecordModal({
+    added: 'Yangi migrant reyestrga qo‘shildi',
+    updated: 'Ma’lumot yangilandi',
+    removed: 'Yozuv reyestrdan o‘chirildi',
+  })
+
+/** Joriy filtrlar bo'yicha CSV eksport */
+const exportList = () =>
+  run(
+    () => exportCollection('migrants', {
+      search: q.value || undefined,
+      country: fCountry.value === 'all' ? undefined : fCountry.value,
+      gender: fGender.value === 'all' ? undefined : fGender.value,
+      risky: fRisk.value === 'all' ? undefined : String(fRisk.value === 'risky'),
+    }),
+    'Reyestr CSV ko‘rinishida yuklab olindi',
+  )
 
 const saved = (e) => {
   if (e.mode === 'add') page.value = 1
@@ -66,7 +79,9 @@ const removed = (e) => {
     <PanelCard eyebrow="Yagona reyestr" title="Migrantlar bazasi"
                :hint="`${fmt(list.length)} ta yozuv topildi`" class="enter">
       <template #actions>
-        <button class="btn"><AppIcon name="export" :size="14" /> Eksport</button>
+        <button class="btn" @click="exportList">
+          <AppIcon name="export" :size="14" /> Eksport
+        </button>
         <button class="btn primary" @click="openAdd">
           <AppIcon name="plus" :size="14" /> Migrant qo‘shish
         </button>

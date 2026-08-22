@@ -10,7 +10,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { origin } from '@/data/mock'
+import { FALLBACK_ORIGIN } from '@/data/labels'
 import { fmt } from '@/composables/useCountUp'
 import { useApp } from '@/stores/app'
 
@@ -18,6 +18,14 @@ const countries = db.countries
 const regions = db.regions
 const sosEvents = db.sosEvents
 const purposes = db.purposes
+
+/** Oqimlarning boshlanish nuqtasi — bazadagi poytaxt hududidan olinadi */
+const origin = computed(() => {
+  const capital = db.regions.find((r) => r.name === 'Toshkent shahri')
+  return capital
+    ? { name: capital.name, lat: capital.lat, lng: capital.lng }
+    : FALLBACK_ORIGIN
+})
 
 const { state, selectCountry, setRegion } = useApp()
 const sortKey = ref('total')

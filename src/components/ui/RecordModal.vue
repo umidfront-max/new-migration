@@ -3,9 +3,11 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { schemas, blankModel, toFormModel } from '@/data/schemas'
-import { months } from '@/data/mock'
-import { saveRecord, removeRecord } from '@/stores/db'
-import { makeCredentials, MIN_PASSWORD } from '@/composables/usePassword'
+import { months } from '@/data/labels'
+import { ApiError, removeRecord, saveRecord } from '@/stores/db'
+
+/** Parol uchun eng kam uzunlik — serverdagi validator bilan bir xil */
+const MIN_PASSWORD = 6
 
 const props = defineProps({
   /** db to'plami nomi: migrants | countries | employers | ... */
@@ -23,6 +25,7 @@ const form = ref({})
 const errors = ref({})
 const askDelete = ref(false)
 const busy = ref(false)
+const serverError = ref('')
 const formEl = ref(null)
 const revealed = ref({})
 
@@ -40,6 +43,7 @@ watch(
     if (!open) return
     form.value = props.record ? toFormModel(props.collection, props.record) : blankModel(props.collection)
     errors.value = {}
+    serverError.value = ''
     askDelete.value = false
     nextTick(() => formEl.value?.querySelector('input, select')?.focus())
   },
@@ -97,29 +101,29 @@ const submit = async () => {
       clean[f.key] = clean[f.key].trim()
     }
   })
-  /* Parol hech qachon ochiq saqlanmaydi — tuz va hash yoziladi */
-  const secrets = schema.value.fields.filter((f) => f.type === 'password')
-  if (secrets.length) {
-    busy.value = true
-    try {
-      for (const f of secrets) {
-        const value = clean[f.key]
-        delete clean[f.key]
-        if (f.confirm) delete clean[f.confirm]
-        if (value) Object.assign(clean, await makeCredentials(value))
-      }
-    } catch (err) {
-      errors.value = { [secrets[0].key]: err.message }
-      busy.value = false
-      return
-    }
-    busy.value = false
-  }
+  /* Bo'sh parol yuborilmaydi — server eskisini saqlab qoladi */
+  schema.value.fields
+    .filter((f) => f.type === 'password')
+    .forEach((f) => {
+      if (!clean[f.key]) delete clean[f.key]
+      if (f.confirm) delete clean[f.confirm]
+    })
 
   const data = schema.value.derive ? schema.value.derive(clean) : clean
-  const row = saveRecord(props.collection, props.record?._id, data)
-  emit('saved', { row, mode: isEdit.value ? 'edit' : 'add' })
-  emit('close')
+  const mode = isEdit.value ? 'edit' : 'add'
+
+  busy.value = true
+  try {
+    const row = await saveRecord(props.collection, props.record?._id, data)
+    emit('saved', { row, mode })
+    emit('close')
+  } catch (error) {
+    /* Server maydon xatolarini qaytarsa — ularni formada ko'rsatamiz */
+    if (error instanceof ApiError && error.fields) errors.value = error.fields
+    else serverError.value = error.message || 'Saqlab bo‘lmadi'
+  } finally {
+    busy.value = false
+  }
 }
 
 /* Esc — oynani yopadi */
@@ -129,10 +133,18 @@ const onKey = (e) => {
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
 
-const destroy = () => {
-  removeRecord(props.collection, props.record._id)
-  emit('removed', props.record)
-  emit('close')
+const destroy = async () => {
+  busy.value = true
+  try {
+    await removeRecord(props.collection, props.record._id)
+    emit('removed', props.record)
+    emit('close')
+  } catch (error) {
+    serverError.value = error.message || 'O‘chirib bo‘lmadi'
+    askDelete.value = false
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
@@ -152,6 +164,12 @@ const destroy = () => {
               <AppIcon name="close" :size="18" />
             </button>
           </header>
+
+          <Transition name="flash">
+            <p v-if="serverError" class="srvErr">
+              <AppIcon name="close" :size="14" /> {{ serverError }}
+            </p>
+          </Transition>
 
           <form ref="formEl" class="grid" @submit.prevent="submit">
             <label
@@ -228,12 +246,12 @@ const destroy = () => {
           <footer>
             <div class="left">
               <template v-if="isEdit">
-                <button v-if="!askDelete" class="btn danger" @click="askDelete = true">
+                <button v-if="!askDelete" class="btn danger" :disabled="busy" @click="askDelete = true">
                   O‘chirish
                 </button>
                 <template v-else>
                   <span class="ask">Yozuv o‘chirilsinmi?</span>
-                  <button class="btn danger" @click="destroy">Ha, o‘chirilsin</button>
+                  <button class="btn danger" :disabled="busy" @click="destroy">Ha, o‘chirilsin</button>
                   <button class="btn" @click="askDelete = false">Bekor</button>
                 </template>
               </template>
@@ -278,6 +296,18 @@ header {
   border-bottom: 1px solid var(--line);
 }
 header h3 { font-size: 17px; margin-top: 4px; }
+
+.srvErr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--coral);
+  background: var(--coral-dim);
+  font-size: 12.5px;
+  color: var(--coral);
+}
 
 .x {
   display: grid;

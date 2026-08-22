@@ -7,7 +7,7 @@ import DonutBreak from '@/components/charts/DonutBreak.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db, serie } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { months } from '@/data/mock'
+import { months } from '@/data/labels'
 
 const aiInsights = db.aiInsights
 const composition = db.composition

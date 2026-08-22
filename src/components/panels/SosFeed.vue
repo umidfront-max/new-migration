@@ -12,7 +12,7 @@ const props = defineProps({
   editable: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['edit', 'resolve'])
 
 const items = ref(sosEvents.slice(0, props.limit).map((e) => ({ ...e })))
 let timer = null
@@ -70,9 +70,15 @@ const openCount = computed(() => items.value.filter((i) => i.severity !== 'low')
           <span class="sev">{{ sevName[e.severity] }}</span>
           <span class="time num">{{ ago(e.minutesAgo) }}</span>
         </div>
-        <button v-if="editable" class="edit" aria-label="Tahrirlash" @click="emit('edit', e)">
-          <AppIcon name="edit" :size="13" />
-        </button>
+        <span v-if="editable" class="acts">
+          <button v-if="!e.resolved" class="edit" title="Murojaatni yopish"
+                  @click="emit('resolve', e)">
+            <AppIcon name="check" :size="13" />
+          </button>
+          <button class="edit" aria-label="Tahrirlash" @click="emit('edit', e)">
+            <AppIcon name="edit" :size="13" />
+          </button>
+        </span>
       </li>
     </TransitionGroup>
 
@@ -127,6 +133,7 @@ const openCount = computed(() => items.value.filter((i) => i.severity !== 'low')
   gap: 2px;
 }
 
+.acts { display: inline-flex; gap: 2px; flex-shrink: 0; }
 .edit {
   flex-shrink: 0;
   display: grid;

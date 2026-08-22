@@ -7,7 +7,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { months } from '@/data/mock'
+import { months } from '@/data/labels'
 import { fmt } from '@/composables/useCountUp'
 
 const borderPoints = db.borderPoints

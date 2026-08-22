@@ -8,7 +8,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db, serie } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
-import { months } from '@/data/mock'
+import { months } from '@/data/labels'
 
 const regions = db.regions
 const returnStats = db.returnStats

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db } from '@/stores/db'
+import { db, generateReport } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 
 const templates = db.reportTemplates
@@ -12,7 +12,7 @@ const recent = db.reportArchive
 const building = ref(null)
 /* Qo'shish / tahrirlash */
 const target = ref('reportTemplates')
-const { modal, editing, flash, openEdit, close, onSaved, onRemoved } = useRecordModal()
+const { modal, editing, flash, openEdit, close, onSaved, onRemoved, run } = useRecordModal()
 const add = (c) => {
   target.value = c
   editing.value = null
@@ -24,9 +24,11 @@ const edit = (c, row) => {
 }
 
 
-const build = (id) => {
-  building.value = id
-  setTimeout(() => (building.value = null), 2400)
+/** Shablon bo'yicha hisobot shakllantiradi — arxivga yozuv qo'shiladi */
+const build = async (template) => {
+  building.value = template._id
+  await run(() => generateReport(template), `${template.name} — arxivga qo‘shildi`)
+  building.value = null
 }
 
 </script>
@@ -56,7 +58,7 @@ const build = (id) => {
             <span class="pr">{{ t.period }}</span>
             <span v-for="f in String(t.fmt || '').split(',').filter(Boolean)" :key="f" class="fm num">{{ f.trim() }}</span>
           </div>
-          <button class="mk" :disabled="building === t._id" @click="build(t._id)">
+          <button class="mk" :disabled="building === t._id" @click="build(t)">
             <template v-if="building !== t._id">
               <AppIcon name="export" :size="14" /> Shakllantirish
             </template>

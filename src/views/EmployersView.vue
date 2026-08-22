@@ -5,7 +5,7 @@ import StatTile from '@/components/ui/StatTile.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db } from '@/stores/db'
+import { db, exportCollection } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -22,11 +22,15 @@ const statusTone = { 'Tasdiqlangan': 'turk', 'Kuzatuvda': 'saffron', 'Cheklangan
 /** Shartnoma turi — eski yozuvlarda faqat foiz bo'lishi mumkin */
 const employmentOf = (e) => e.employment || (e.formal >= 50 ? 'Rasmiy shartnoma' : 'Norasmiy bandlik')
 
-const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved } = useRecordModal({
-  added: 'Ish beruvchi reyestrga qo‘shildi',
-  updated: 'Tashkilot ma’lumoti yangilandi',
-  removed: 'Tashkilot reyestrdan o‘chirildi',
-})
+const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, run } =
+  useRecordModal({
+    added: 'Ish beruvchi reyestrga qo‘shildi',
+    updated: 'Tashkilot ma’lumoti yangilandi',
+    removed: 'Tashkilot reyestrdan o‘chirildi',
+  })
+
+const exportList = () =>
+  run(() => exportCollection('employers'), 'Ish beruvchilar yuklab olindi')
 
 const formalSplit = computed(() => {
   const formal = employers.reduce((a, e) => a + (e.sent * e.formal) / 100, 0)
@@ -51,6 +55,9 @@ const formalSplit = computed(() => {
                  hint="Norasmiy bandlik bilan ishlaydigan tashkilotlar avtomatik kuzatuvga olinadi"
                  class="enter" :style="{ '--i': 4 }">
         <template #actions>
+          <button class="v-btn" @click="exportList">
+            <AppIcon name="export" :size="14" /> Eksport
+          </button>
           <button class="v-btn add" @click="openAdd">
             <AppIcon name="plus" :size="14" /> Ish beruvchi qo‘shish
           </button>

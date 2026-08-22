@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import { useAuth, demoUsers } from '@/stores/auth'
+import { useAuth, demoAccounts, DEMO_PASSWORD } from '@/stores/auth'
 import { useTheme } from '@/stores/theme'
 
 const router = useRouter()
@@ -24,27 +24,24 @@ const features = [
   { icon: 'brain', title: 'AI xavf baholash', text: 'Model har bir yozuv uchun xavf ballini hisoblaydi' },
 ]
 
-const submit = () => {
+const submit = async () => {
   error.value = ''
   if (!login.value.trim()) return (error.value = 'Login kiritilmadi')
   if (!password.value) return (error.value = 'Parol kiritilmadi')
 
   busy.value = true
-  /* Demo: tarmoq kechikishini taqlid qiladi */
-  setTimeout(async () => {
-    const res = await signIn(login.value, password.value)
-    busy.value = false
-    if (!res.ok) {
-      error.value = res.error
-      return
-    }
-    router.replace(typeof route.query.next === 'string' ? route.query.next : '/')
-  }, 550)
+  const result = await signIn(login.value, password.value)
+  busy.value = false
+  if (!result.ok) {
+    error.value = result.error
+    return
+  }
+  router.replace(typeof route.query.next === 'string' ? route.query.next : '/')
 }
 
-const useDemo = (u) => {
-  login.value = u.login
-  password.value = 'demo'
+const useDemo = (account) => {
+  login.value = account.login
+  password.value = DEMO_PASSWORD
   error.value = ''
   demoOpen.value = false
 }
@@ -166,7 +163,7 @@ const useDemo = (u) => {
         </button>
 
         <!-- Demo hisoblar — yig'iladigan blok -->
-        <div v-if="demoUsers.length" class="demo" :class="{ on: demoOpen }">
+        <div class="demo" :class="{ on: demoOpen }">
           <button type="button" class="dt" :aria-expanded="demoOpen" @click="demoOpen = !demoOpen">
             <AppIcon name="spark" :size="14" />
             Demo hisob bilan sinab ko‘rish
@@ -174,13 +171,13 @@ const useDemo = (u) => {
           </button>
           <Transition name="fold">
             <div v-if="demoOpen" class="dl">
-              <button v-for="u in demoUsers" :key="u.login" type="button" class="du"
+              <button v-for="u in demoAccounts" :key="u.login" type="button" class="du"
                       @click="useDemo(u)">
                 <b class="num">{{ u.login }}</b>
                 <span>{{ u.role }}</span>
               </button>
               <p class="dp">
-              Bu hisoblarda parol — <b class="num">demo</b>.
+              Bu hisoblarda parol — <b class="num">{{ DEMO_PASSWORD }}</b>.
               Administrator paneli orqali qo‘shilgan hisoblar o‘z paroli bilan kiradi.
             </p>
             </div>

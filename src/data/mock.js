@@ -1,4 +1,10 @@
-/* Demo ma'lumotlar. Backend ulanganda faqat shu fayl API chaqiruvlariga almashtiriladi. */
+/* ==========================================================================
+   Demo ma'lumotlar — ILOVADA ISHLATILMAYDI.
+
+   Ilova barcha ma'lumotni backend API'dan oladi (src/stores/db.js).
+   Bu fayl faqat backend uchun boshlang'ich ma'lumot manbai bo'lib qoldi:
+   `node scripts/export_seed.mjs` uni o'qib `seed/demo_seed.json` yasaydi.
+   ========================================================================== */
 
 /* Deterministik psevdo-tasodif — har safar bir xil natija */
 let _s = 20260822
