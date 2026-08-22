@@ -7,3 +7,11 @@ dist
 .vscode/*
 !.vscode/extensions.json
 npm-debug.log*
+
+# Python / Django
+.venv
+__pycache__/
+*.py[cod]
+backend/db.sqlite3
+backend/staticfiles/
+backend/.env
