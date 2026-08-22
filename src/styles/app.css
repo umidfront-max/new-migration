@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Migratsiya monitoringi — dizayn tokenlari
+   Palitra: Rishton keramikasi (chuqur siyoh ko'k + firuza) + saffron + marjon
+   ========================================================================== */
+
+/* --------------------------------------------------------------- mavzu
+   Standart — qorong'i. html[data-theme="light"] yorug' rejimni yoqadi.
+   Ranglar RGB uchlik ko'rinishida ham beriladi — rgba(var(--x-rgb), a) uchun.
+   ------------------------------------------------------------------- */
+:root {
+  /* Sirtlar (qorong'i) */
+  --ink-900: #060c18;
+  --ink-800: #0a1322;
+  --ink-700: #0f1c31;
+  --ink-600: #16273f;
+
+  --panel-rgb: 10, 19, 34;
+  --panel-hi-rgb: 22, 39, 63;
+  --deep-rgb: 6, 12, 24;
+  --scrim-rgb: 3, 7, 14;
+  --mist-rgb: 146, 176, 214;
+  --white-rgb: 255, 255, 255;
+
+  --line: rgba(var(--mist-rgb), 0.14);
+  --line-strong: rgba(var(--mist-rgb), 0.28);
+  --surface: rgba(var(--panel-rgb), 0.5);
+  --surface-2: rgba(var(--panel-rgb), 0.72);
+  --field: rgba(var(--deep-rgb), 0.7);
+  --hover: rgba(var(--mist-rgb), 0.05);
+  --panel-grad: linear-gradient(168deg, rgba(var(--panel-hi-rgb), 0.72), rgba(var(--panel-rgb), 0.86));
+  --rail-bg: linear-gradient(180deg, rgba(var(--panel-hi-rgb), 0.5), rgba(var(--deep-rgb), 0.86));
+  --head-bg: rgba(var(--deep-rgb), 0.78);
+
+  /* Aksentlar */
+  --turk: #35e0c8;
+  --turk-rgb: 53, 224, 200;
+  --turk-dim: rgba(var(--turk-rgb), 0.14);
+  --lapis: #5a86f7;
+  --lapis-rgb: 90, 134, 247;
+  --lapis-dim: rgba(var(--lapis-rgb), 0.16);
+  --saffron: #f5a524;
+  --saffron-rgb: 245, 165, 36;
+  --saffron-dim: rgba(var(--saffron-rgb), 0.16);
+  --coral: #ff5c72;
+  --coral-rgb: 255, 92, 114;
+  --coral-dim: rgba(var(--coral-rgb), 0.16);
+  --violet: #a97bf5;
+
+  /* Matn */
+  --snow: #e9f1ff;
+  --mist: #93a6c2;
+  --mist-dim: #62748f;
+
+  /* Shakl */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* Harakat */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur: 0.45s;
+
+  /* Tipografika */
+  --font-display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+  --font-body: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  --font-data: 'JetBrains Mono', ui-monospace, monospace;
+
+  --shadow-lift: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  --glow-op: 0.5;
+  --rail-w: 264px;
+  --head-h: 76px;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------- yorug' */
+html[data-theme='light'] {
+  --ink-900: #eef2f9;
+  --ink-800: #ffffff;
+  --ink-700: #f5f8fd;
+  --ink-600: #e6ecf6;
+
+  --panel-rgb: 255, 255, 255;
+  --panel-hi-rgb: 255, 255, 255;
+  --deep-rgb: 246, 249, 253;
+  --scrim-rgb: 20, 33, 56;
+  --mist-rgb: 74, 103, 148;
+  --white-rgb: 12, 26, 46;
+
+  --line: rgba(var(--mist-rgb), 0.16);
+  --line-strong: rgba(var(--mist-rgb), 0.32);
+  --surface: rgba(var(--deep-rgb), 0.9);
+  --surface-2: #ffffff;
+  --field: #ffffff;
+  --hover: rgba(var(--mist-rgb), 0.06);
+  --panel-grad: linear-gradient(168deg, #ffffff, #fbfcff);
+  --rail-bg: linear-gradient(180deg, #ffffff, #f4f7fc);
+  --head-bg: rgba(255, 255, 255, 0.82);
+
+  /* Aksentlar oq fonda o'qilishi uchun to'yintirilgan */
+  --turk: #0f9e8c;
+  --turk-rgb: 15, 158, 140;
+  --lapis: #3567e0;
+  --lapis-rgb: 53, 103, 224;
+  --saffron: #c97a06;
+  --saffron-rgb: 201, 122, 6;
+  --coral: #e0344f;
+  --coral-rgb: 224, 52, 79;
+  --violet: #7b4ed4;
+
+  --snow: #0d1a2e;
+  --mist: #4a5f7d;
+  --mist-dim: #7b8ca5;
+
+  --shadow-lift: 0 20px 50px -26px rgba(23, 43, 77, 0.35);
+  --glow-op: 0.22;
+
+  color-scheme: light;
+}
+
+/* --------------------------------------------------------- reset & base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-900);
+  transition: background 0.4s var(--ease-out), color 0.4s var(--ease-out);
+  color: var(--snow);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--turk);
+  color: var(--ink-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--turk);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Ingichka skrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--mist-rgb), 0.2);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--mist-rgb), 0.4);
+  background-clip: content-box;
+}
+
+/* ----------------------------------------------------------- yordamchi */
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mist-dim);
+}
+
+.num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.muted {
+  color: var(--mist);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+/* --------------------------------------------------------- animatsiya */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.12);
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Sahnaga chiqish: elementga --i o'zgaruvchisi bilan navbat beriladi */
+.enter {
+  opacity: 0;
+  animation: rise 0.7s var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+/* Route almashinuvi */
+.view-enter-active {
+  transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+}
+.view-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  position: absolute;
+  inset: 0;
+}
+.view-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.view-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Ro'yxat animatsiyalari */
+.list-enter-active {
+  transition: all 0.5s var(--ease-out);
+}
+.list-leave-active {
+  transition: all 0.3s ease;
+  position: absolute;
+  width: 100%;
+}
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(24px);
+}
+.list-move {
+  transition: transform 0.5s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .enter {
+    opacity: 1;
+  }
+}

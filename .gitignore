@@ -1,0 +1,9 @@
+node_modules
+dist
+.ssr
+.smoke
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+npm-debug.log*

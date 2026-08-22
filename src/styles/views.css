@@ -1,0 +1,140 @@
+/* Sahifalarda takrorlanadigan uslublar (global) */
+
+.v-page {
+  display: grid;
+  gap: 18px;
+}
+
+.v-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.v-2 { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v-3 { display: grid; gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v-2-1 { display: grid; gap: 18px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.v-1-2 { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+
+@media (max-width: 1100px) {
+  .v-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 880px) {
+  .v-2, .v-3, .v-2-1, .v-1-2 { grid-template-columns: 1fr; }
+}
+
+/* Tugmalar */
+.v-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--mist);
+  transition: all 0.3s var(--ease-out);
+}
+.v-btn:hover { color: var(--turk); border-color: var(--turk); }
+.v-btn.on { color: var(--turk); border-color: var(--turk); background: var(--turk-dim); }
+
+/* Jadval */
+.v-tblWrap { overflow-x: auto; }
+.v-tbl { width: 100%; border-collapse: collapse; min-width: 620px; }
+.v-tbl th {
+  text-align: left;
+  padding: 9px 12px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mist-dim);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.v-tbl td {
+  padding: 11px 12px;
+  font-size: 12.5px;
+  border-bottom: 1px solid rgba(var(--mist-rgb), 0.07);
+}
+.v-tbl tbody tr {
+  animation: rise 0.5s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  transition: background 0.25s ease;
+}
+.v-tbl tbody tr:hover { background: rgba(var(--mist-rgb), 0.05); }
+
+/* Progress chizig'i */
+.v-meter {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(var(--mist-rgb), 0.12);
+  overflow: hidden;
+  min-width: 70px;
+}
+.v-meter i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transform-origin: left;
+  animation: meterIn 1s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms + 200ms);
+}
+@keyframes meterIn { from { transform: scaleX(0); } }
+
+/* Ma'lumot bloklari */
+.v-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--mist);
+}
+.v-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.v-chip {
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--mist);
+  background: rgba(var(--panel-rgb), 0.5);
+  animation: rise 0.5s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 35ms);
+  transition: all 0.3s var(--ease-out);
+}
+.v-chip:hover { color: var(--turk); border-color: var(--turk); transform: translateY(-2px); }
+
+/* Qo'shish / tahrirlash tugmalari */
+.v-btn.add { color: var(--turk); border-color: var(--turk); background: var(--turk-dim); }
+.v-btn.add:hover { background: rgba(var(--turk-rgb), 0.22); }
+
+.v-mini {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--mist-dim);
+  transition: all 0.3s var(--ease-out);
+}
+.v-mini:hover { color: var(--turk); border-color: var(--turk); }
+.v-ta { text-align: right; }
+
+/* Saqlandi / o'chirildi xabari */
+.v-flash {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 14px;
+  padding: 8px 13px;
+  border-radius: 9px;
+  border: 1px solid var(--turk);
+  background: var(--turk-dim);
+  font-size: 12.5px;
+  color: var(--turk);
+}
+.flash-enter-active,
+.flash-leave-active { transition: all 0.35s var(--ease-out); }
+.flash-enter-from,
+.flash-leave-to { opacity: 0; transform: translateY(-6px); }
