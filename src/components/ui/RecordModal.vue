@@ -25,6 +25,12 @@ const formEl = ref(null)
 
 const optionsOf = (f) => (typeof f.options === 'function' ? f.options() : f.options || [])
 
+/** `multi` maydonda variantni qo'shish yoki olib tashlash */
+const toggleMulti = (key, value) => {
+  const list = form.value[key] || []
+  form.value[key] = list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
+}
+
 watch(
   () => [props.open, props.record],
   ([open]) => {
@@ -42,6 +48,10 @@ const validate = () => {
   schema.value.fields.forEach((f) => {
     if (f.type === 'series') return
     const v = form.value[f.key]
+    if (f.type === 'multi') {
+      if (f.required && !(v || []).length) e[f.key] = 'Kamida bittasini tanlang'
+      return
+    }
     const empty = v === '' || v === null || v === undefined
     if (f.required && empty) e[f.key] = 'To‘ldirilishi shart'
     else if (!empty && f.pattern && !new RegExp(f.pattern).test(String(v))) e[f.key] = f.hint || 'Format noto‘g‘ri'
@@ -66,6 +76,7 @@ const submit = () => {
       clean[f.key] = empty ? (f.nullable ? null : 0) : Number(clean[f.key])
     }
     if (f.type === 'series') clean[f.key] = (clean[f.key] || []).map((n) => Number(n) || 0)
+    if (f.type === 'multi') clean[f.key] = [...(clean[f.key] || [])]
     if ((f.type === 'text' || f.type === 'textarea') && typeof clean[f.key] === 'string') {
       clean[f.key] = clean[f.key].trim()
     }
@@ -128,6 +139,18 @@ const destroy = () => {
                 <span class="boolTxt">{{ form[f.key] ? 'Ha' : 'Yo‘q' }}</span>
               </span>
 
+              <span v-else-if="f.type === 'multi'" class="multi">
+                <button
+                  v-for="o in optionsOf(f)" :key="o.value" type="button"
+                  class="chip" :class="{ on: (form[f.key] || []).includes(o.value) }"
+                  :aria-pressed="(form[f.key] || []).includes(o.value)"
+                  @click="toggleMulti(f.key, o.value)"
+                >
+                  <AppIcon v-if="(form[f.key] || []).includes(o.value)" name="check" :size="12" />
+                  {{ o.label }}
+                </button>
+              </span>
+
               <textarea v-else-if="f.type === 'textarea'" v-model="form[f.key]" rows="3"
                         :placeholder="f.placeholder" />
 
@@ -146,6 +169,9 @@ const destroy = () => {
               />
 
               <span v-if="errors[f.key]" class="err">{{ errors[f.key] }}</span>
+              <span v-else-if="f.type === 'multi'" class="hint">
+                {{ (form[f.key] || []).length }} ta tanlandi{{ f.hint ? ' · ' + f.hint : '' }}
+              </span>
               <span v-else-if="f.hint" class="hint">{{ f.hint }}</span>
             </label>
           </form>
@@ -236,6 +262,35 @@ header h3 { font-size: 17px; margin-top: 4px; }
 
 .lb { font-size: 11.5px; color: var(--mist-dim); }
 .req { color: var(--coral); font-style: normal; margin-left: 3px; }
+
+.multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 9px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  max-height: 168px;
+  overflow-y: auto;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--mist);
+  transition: all 0.25s var(--ease-out);
+}
+.chip:hover { border-color: var(--line-strong); color: var(--snow); }
+.chip.on {
+  border-color: var(--turk);
+  background: var(--turk-dim);
+  color: var(--turk);
+}
 
 .ser {
   display: grid;

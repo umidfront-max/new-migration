@@ -15,6 +15,7 @@ export const routes = [
   { path: '/risk', component: () => import('../views/RiskView.vue'), meta: { title: 'AI Risk Score' } },
   { path: '/ai', component: () => import('../views/AiView.vue'), meta: { title: 'AI Tahlil' } },
   { path: '/admin', component: () => import('../views/AdminView.vue'), meta: { title: 'Administrator paneli' } },
+  { path: '/users', component: () => import('../views/UsersView.vue'), meta: { title: 'Foydalanuvchilar' } },
   { path: '/audit', component: () => import('../views/AuditView.vue'), meta: { title: 'Audit va jurnal' } },
   { path: '/reports', component: () => import('../views/ReportsView.vue'), meta: { title: 'Hisobot va eksport' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },

@@ -62,7 +62,10 @@ const openAdd = () => add('borderPoints')
         <div class="pts">
           <div v-for="(p, i) in borderPoints" :key="p._id" class="pt" :style="{ '--i': i }">
             <div class="ptTop">
-              <span class="ptNm">{{ p.name }}</span>
+              <span class="ptNm">
+                {{ p.name }}
+                <span v-if="p.region" class="ptRg">{{ p.region }}</span>
+              </span>
               <span class="ptRight">
                 <span class="num ptLd" :class="`c-${tone(p.load)}`">{{ p.load }}%</span>
                 <button class="v-mini" aria-label="Tahrirlash" @click="edit('borderPoints', p)">
@@ -122,7 +125,14 @@ const openAdd = () => add('borderPoints')
 }
 .ptTop { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 7px; }
 .ptRight { display: inline-flex; align-items: center; gap: 10px; }
-.ptNm { font-size: 13px; }
+.ptNm { font-size: 13px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.ptRg {
+  padding: 2px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  font-size: 10.5px;
+  color: var(--mist-dim);
+}
 .ptLd { font-size: 13px; font-weight: 700; }
 .ptBot {
   display: flex;

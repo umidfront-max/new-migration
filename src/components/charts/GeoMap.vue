@@ -107,9 +107,20 @@ function buildFlows() {
          <i>Jami</i><b>${fmt(c.total)}</b>
          <i>Chiqqan</i><b>${fmt(c.out)}</b>
          <i>Qaytgan</i><b>${fmt(c.back)}</b>
-         <i>Qidiruvda</i><b>${fmt(c.wanted)}</b>
-         <i>Jo‘natma</i><b>${fmt(c.remit)} mln $</b>
-         <i>Xavf</i><b style="color:${tone}">${c.risk}</b>`,
+         <u>Chiqish maqsadi</u>
+         <i>Ishlash</i><b>${fmt(c.work)}</b>
+         <i>O‘qish</i><b>${fmt(c.study)}</b>
+         <i>Davolanish</i><b>${fmt(c.medical)}</b>
+         <i>Doimiy yashash</i><b>${fmt(c.residence)}</b>
+         <i>Sayohat</i><b>${fmt(c.travel)}</b>
+         <u>Alohida nazorat</u>
+         <i>Qidiruvda</i><b class="gm-warn">${fmt(c.wanted)}</b>
+         <i>JMda</i><b class="gm-warn">${fmt(c.jailed)}</b>
+         <i>Bedarak yo‘qolgan</i><b class="gm-warn">${fmt(c.missing)}</b>
+         <u>Pul jo‘natmalari</u>
+         <i>Summasi</i><b>${fmt(c.remit)} mln $</b>
+         <i>Jo‘natmalar soni</i><b>${fmt(c.remitCount)} ming</b>
+         <i>Xavf indeksi</i><b style="color:${tone}">${c.risk}</b>`,
         { className: 'gm-tip', direction: 'auto', offset: [radius + 8, 0], sticky: false },
       )
       .on('click', () => emit('select', c.code))
@@ -617,6 +628,21 @@ onBeforeUnmount(() => {
   font-size: 11px;
   color: var(--mist-dim);
 }
+.gm-tip u {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-data);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--turk);
+}
+.gm-warn { color: var(--saffron); }
+
 .gm-tip i {
   font-style: normal;
   font-size: 11px;

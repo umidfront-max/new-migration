@@ -62,7 +62,7 @@ const formalSplit = computed(() => {
             <thead>
               <tr>
                 <th>Kompaniya</th><th>Yo‘nalishi</th><th>Davlatlar</th>
-                <th>Yuborilgan</th><th>Rasmiy</th><th>Jo‘natma</th><th>Holati</th><th></th>
+                <th>Yuborilgan</th><th>Rasmiy / norasmiy</th><th>Jo‘natma</th><th>Holati</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -76,7 +76,10 @@ const formalSplit = computed(() => {
                     <div class="v-meter" :style="{ '--i': i }">
                       <i :style="{ width: e.formal + '%', background: e.formal >= 80 ? 'var(--turk)' : e.formal >= 60 ? 'var(--saffron)' : 'var(--coral)' }" />
                     </div>
-                    <span class="num sm">{{ e.formal }}%</span>
+                    <span class="split">
+                      <b class="num ok">{{ e.formal }}%</b>
+                      <span class="num bad">{{ 100 - e.formal }}%</span>
+                    </span>
                   </div>
                 </td>
                 <td class="num">{{ e.remit }} mln $</td>
@@ -112,6 +115,11 @@ const formalSplit = computed(() => {
 </template>
 
 <style scoped>
+.split { display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+.split .ok { font-size: 11.5px; color: var(--turk); }
+.split .bad { font-size: 11px; color: var(--coral); }
+.split .bad::before { content: '/'; margin-right: 4px; color: var(--mist-dim); }
+
 .nm { font-weight: 500; white-space: nowrap; }
 .fm { display: flex; align-items: center; gap: 9px; }
 .sm { font-size: 11px; color: var(--mist); }

@@ -42,6 +42,9 @@ const doReset = () => {
                  hint="Har bir rol faqat o‘z ko‘lamidagi ma’lumotni ko‘radi"
                  class="enter">
         <template #actions>
+          <RouterLink to="/users" class="v-btn">
+            <AppIcon name="user" :size="14" /> Foydalanuvchilar
+          </RouterLink>
           <button class="v-btn add" @click="openAdd">
             <AppIcon name="plus" :size="14" /> Yangi rol
           </button>

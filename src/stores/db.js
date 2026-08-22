@@ -23,7 +23,7 @@ export const COLLECTIONS = [
   'reportTemplates', 'reportArchive', 'consulateServices',
   'returnPrograms', 'sosChannels', 'riskWeights',
   /* jurnal va sozlamalar */
-  'auditLog', 'settings',
+  'auditLog', 'settings', 'users',
 ]
 
 const clone = (v) => JSON.parse(JSON.stringify(v))
@@ -45,9 +45,30 @@ const restore = () => {
 
 const saved = restore()
 
+/* Yozuvni tanib olish uchun tabiiy kalitlar — migratsiya shu bo'yicha bog'laydi */
+const NATURAL = ['code', 'login', 'key', 'name', 'label']
+
+/**
+ * Saqlangan yozuvlarga sxemaga yangi qo'shilgan maydonlarni to'ldiradi.
+ * Foydalanuvchi kiritgan qiymatlar hamisha ustun turadi — faqat yetishmayotgan
+ * kalitlar demo ma'lumotdan olinadi. Shu sababli yangilanishdan keyin ham
+ * eski tahrirlar saqlanib qoladi.
+ */
+const hydrate = (rows, seedRows) => {
+  if (!Array.isArray(seedRows)) return rows
+  const key = NATURAL.find((k) => seedRows.every((r) => r[k] !== undefined))
+  return rows.map((row) => {
+    const match = key ? seedRows.find((r) => r[key] === row[key]) : null
+    return match ? { ...match, ...row } : row
+  })
+}
+
 export const db = reactive(
   Object.fromEntries(
-    COLLECTIONS.map((n) => [n, stamp(Array.isArray(saved[n]) ? saved[n] : clone(seed[n]))]),
+    COLLECTIONS.map((n) => [
+      n,
+      stamp(Array.isArray(saved[n]) ? hydrate(saved[n], seed[n]) : clone(seed[n])),
+    ]),
   ),
 )
 
@@ -83,6 +104,7 @@ const LABELS = {
   reportTemplates: 'Hisobot shabloni', reportArchive: 'Arxiv yozuvi',
   consulateServices: 'Konsullik xizmati', returnPrograms: 'Reintegratsiya dasturi',
   sosChannels: 'SOS kanali', riskWeights: 'Model omili', settings: 'Sozlama',
+  users: 'Foydalanuvchi',
 }
 
 const VERBS = { add: 'qo‘shildi', edit: 'o‘zgartirildi', remove: 'o‘chirildi' }

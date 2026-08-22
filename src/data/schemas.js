@@ -17,6 +17,29 @@ const opt = (arr) => arr.map((v) => ({ value: v, label: v }))
 const countryOpts = () => db.countries.map((c) => ({ value: c.code, label: `${c.flag} ${c.name}` }))
 const regionOpts = () => db.regions.map((r) => ({ value: r.name, label: r.name }))
 
+const regionOptsAll = () => db.regions.map((r) => ({ value: r.name, label: r.name }))
+const countryNameOpts = () => db.countries.map((c) => ({ value: c.name, label: `${c.flag} ${c.name}` }))
+const roleOpts = () => db.roles.map((r) => ({ value: r.name, label: r.name }))
+
+/**
+ * Risk ball — qo'lda kiritilmasa model o'zi hisoblaydi.
+ * Omillar RiskView dagi `riskWeights` bilan bir xil mantiqda.
+ */
+const scoreOf = (v) => {
+  const c = db.countries.find((x) => x.code === v.countryCode)
+  let n = Math.round((c?.risk ?? 30) * 0.42)
+  if (v.purpose === 'Ishlash (norasmiy)') n += 22
+  else if (v.purpose === 'Ishlash (rasmiy)') n += 6
+  else if (v.purpose === 'Doimiy yashash') n += 4
+  if (v.convicted) n += 14
+  if (!v.employer || v.employer === 'Ro‘yxatdan o‘tmagan') n += 9
+  if (v.health === 'Nogironlik' || v.health === 'Surunkali kasallik') n += 4
+  if (v.risk === 'Qidiruvda') n += 30
+  else if (v.risk === 'Jazoni o‘tamoqda') n += 34
+  else if (v.risk === 'Bedarak yo‘qolgan') n += 38
+  return Math.max(4, Math.min(96, n))
+}
+
 /** Davlat kodidan nom va bayroqni to'ldiradi */
 const withCountry = (v) => {
   const c = db.countries.find((x) => x.code === v.countryCode)
@@ -28,14 +51,14 @@ export const schemas = {
   migrants: {
     label: 'Migrant',
     title: { add: 'Yangi migrant qo‘shish', edit: 'Migrant ma’lumotini tahrirlash' },
-    derive: withCountry,
+    /* Risk ball bo'sh qoldirilsa — model hisoblaydi */
+    derive: (v) => ({ ...withCountry(v), score: v.score ?? scoreOf(v) }),
     defaults: () => ({
       gender: 'Erkak',
       nationality: 'O‘zbek',
       purpose: 'Ishlash (rasmiy)',
       remit: '100–300 $',
       risk: 'Xavf yo‘q',
-      score: 12,
       convicted: false,
       countryCode: db.countries[0]?.code,
     }),
@@ -57,14 +80,21 @@ export const schemas = {
       { key: 'address', label: 'Xorijdagi manzil', type: 'text', span: 2 },
       { key: 'remit', label: 'Pul jo‘natmalari', type: 'select', options: opt(remitBands) },
       { key: 'risk', label: 'Holati', type: 'select', options: opt(riskLevels) },
-      { key: 'score', label: 'Risk Score', type: 'number', min: 0, max: 100, hint: '0–100' },
+      {
+        key: 'score', label: 'Risk Score', type: 'number', min: 0, max: 100, nullable: true,
+        hint: 'ixtiyoriy — bo‘sh qolsa model o‘zi hisoblaydi',
+      },
     ],
   },
 
   countries: {
     label: 'Davlat',
     title: { add: 'Yangi davlat qo‘shish', edit: 'Davlat ma’lumotini tahrirlash' },
-    defaults: () => ({ flag: '🏳️', angle: 0, dist: 1000, risk: 30, total: 0, out: 0, back: 0, remit: 0, wanted: 0, missing: 0 }),
+    defaults: () => ({
+      flag: '🏳️', angle: 0, dist: 1000, risk: 30, total: 0, out: 0, back: 0,
+      remit: 0, remitCount: 0, wanted: 0, jailed: 0, missing: 0,
+      work: 0, study: 0, medical: 0, residence: 0, travel: 0,
+    }),
     fields: [
       { key: 'code', label: 'Kod', type: 'text', required: true, hint: 'ISO-2, masalan RU' },
       { key: 'name', label: 'Nomi', type: 'text', required: true },
@@ -79,7 +109,14 @@ export const schemas = {
       { key: 'back', label: 'Qaytganlar', type: 'number' },
       { key: 'remit', label: 'Jo‘natma (mln $)', type: 'number' },
       { key: 'risk', label: 'Xavf darajasi', type: 'number', min: 0, max: 100 },
+      { key: 'remitCount', label: 'Jo‘natmalar soni', type: 'number', hint: 'ming dona / yil' },
+      { key: 'work', label: 'Ishlash maqsadida', type: 'number' },
+      { key: 'study', label: 'O‘qish maqsadida', type: 'number' },
+      { key: 'medical', label: 'Davolanish maqsadida', type: 'number' },
+      { key: 'residence', label: 'Doimiy yashash', type: 'number' },
+      { key: 'travel', label: 'Sayohat', type: 'number' },
       { key: 'wanted', label: 'Qidiruvdagilar', type: 'number' },
+      { key: 'jailed', label: 'Jazoni o‘tayotganlar', type: 'number', hint: 'JMda' },
       { key: 'missing', label: 'Bedarak yo‘qolganlar', type: 'number' },
     ],
   },
@@ -113,32 +150,59 @@ export const schemas = {
     ],
   },
 
+  users: {
+    label: 'Foydalanuvchi',
+    title: { add: 'Yangi foydalanuvchi qo‘shish', edit: 'Foydalanuvchini tahrirlash' },
+    derive: (v) => ({ ...v, login: String(v.login || '').trim().toLowerCase() }),
+    defaults: () => ({ status: 'Faol', role: db.roles[0]?.name }),
+    fields: [
+      { key: 'name', label: 'F.I.Sh', type: 'text', required: true, span: 2, placeholder: 'A. Karimov' },
+      {
+        key: 'login', label: 'Login', type: 'text', required: true,
+        pattern: '^[a-z0-9._-]{3,32}$', hint: 'kichik lotin harflari, raqam, nuqta',
+      },
+      { key: 'status', label: 'Holati', type: 'select', options: opt(['Faol', 'Bloklangan']) },
+      { key: 'role', label: 'Roli', type: 'select', required: true, options: roleOpts, span: 2 },
+      { key: 'unit', label: 'Tashkilot / bo‘lim', type: 'text', span: 2 },
+      { key: 'phone', label: 'Telefon', type: 'text', span: 2, placeholder: '+998 71 200-10-01' },
+    ],
+  },
+
   employers: {
     label: 'Ish beruvchi',
     title: { add: 'Yangi ish beruvchi qo‘shish', edit: 'Ish beruvchini tahrirlash' },
-    derive: (v) => ({
-      ...v,
-      countries: String(v.countries || '').split(',').map((s) => s.trim()).filter(Boolean),
+    derive: (v) => ({ ...v, countries: [...(v.countries || [])] }),
+    toForm: (r) => ({
+      ...r,
+      countries: Array.isArray(r.countries)
+        ? [...r.countries]
+        : String(r.countries || '').split(',').map((x) => x.trim()).filter(Boolean),
     }),
-    toForm: (r) => ({ ...r, countries: Array.isArray(r.countries) ? r.countries.join(', ') : r.countries }),
-    defaults: () => ({ status: 'Kuzatuvda', sent: 0, formal: 60, remit: 0 }),
+    defaults: () => ({ status: 'Kuzatuvda', sent: 0, formal: 60, remit: 0, countries: [] }),
     fields: [
       { key: 'name', label: 'Kompaniya nomi', type: 'text', required: true, span: 2 },
       { key: 'dir', label: 'Yo‘nalishi', type: 'select', required: true, options: opt(['Qurilish', 'Logistika', 'Servis', 'Yengil sanoat', 'Qishloq xo‘jaligi', 'IT', 'Tibbiyot', 'Boshqa']) },
       { key: 'status', label: 'Holati', type: 'select', options: opt(['Tasdiqlangan', 'Kuzatuvda', 'Cheklangan']) },
-      { key: 'countries', label: 'Davlatlar', type: 'text', span: 2, hint: 'vergul bilan ajrating', placeholder: 'Rossiya, Qozog‘iston' },
+      {
+        key: 'countries', label: 'Qaysi davlatlarga yuboradi', type: 'multi', span: 2,
+        required: true, options: countryNameOpts, hint: 'bir nechtasini tanlash mumkin',
+      },
       { key: 'sent', label: 'Yuborilgan migrantlar', type: 'number' },
-      { key: 'formal', label: 'Rasmiy shartnoma (%)', type: 'number', min: 0, max: 100 },
       { key: 'remit', label: 'Jo‘natma (mln $)', type: 'number' },
+      {
+        key: 'formal', label: 'Rasmiy shartnoma ulushi (%)', type: 'number', min: 0, max: 100, span: 2,
+        hint: 'qolgani norasmiy bandlik deb hisoblanadi',
+      },
     ],
   },
 
   borderPoints: {
     label: 'O‘tkazish punkti',
     title: { add: 'Yangi o‘tkazish punkti', edit: 'Punktni tahrirlash' },
-    defaults: () => ({ out: 0, in: 0, load: 40 }),
+    defaults: () => ({ out: 0, in: 0, load: 40, region: db.regions[0]?.name }),
     fields: [
-      { key: 'name', label: 'Punkt nomi', type: 'text', required: true, span: 2 },
+      { key: 'region', label: 'Viloyat', type: 'select', required: true, options: regionOptsAll },
+      { key: 'name', label: 'Punkt nomi', type: 'text', required: true, placeholder: '“Yallama” avtomobil o‘tkazish punkti' },
       { key: 'out', label: 'Chiqish (bugun)', type: 'number' },
       { key: 'in', label: 'Kirish (bugun)', type: 'number' },
       { key: 'load', label: 'Yuklama (%)', type: 'number', min: 0, max: 100, span: 2 },
@@ -447,6 +511,7 @@ export function blankModel(name) {
     if (f.type === 'bool') return false
     if (f.type === 'number') return null
     if (f.type === 'series') return Array(12).fill(0)
+    if (f.type === 'multi') return []
     return ''
   }
   const base = Object.fromEntries(s.fields.map((f) => [f.key, empty(f)]))
@@ -457,6 +522,7 @@ export function blankModel(name) {
 export function toFormModel(name, row) {
   const s = schemas[name]
   const src = s.toForm ? s.toForm(row) : row
-  const pick = (f) => (f.type === 'series' ? [...(src[f.key] || [])] : src[f.key])
+  const pick = (f) =>
+    f.type === 'series' || f.type === 'multi' ? [...(src[f.key] || [])] : src[f.key]
   return { ...blankModel(name), ...Object.fromEntries(s.fields.map((f) => [f.key, pick(f)])) }
 }

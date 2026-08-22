@@ -1,5 +1,5 @@
 import { reactive, computed } from 'vue'
-import { actor } from '@/stores/db'
+import { actor, db } from '@/stores/db'
 
 /* ==========================================================================
    Demo autentifikatsiya.
@@ -9,13 +9,8 @@ import { actor } from '@/stores/db'
 
 const KEY = 'migrant-session'
 
-/** Demo hisoblar — parol hammasida `demo` */
-export const demoUsers = [
-  { login: 'admin.root', name: 'A. Karimov', role: 'Super administrator', unit: 'Migratsiya agentligi' },
-  { login: 'sh.rasulova', name: 'Sh. Rasulova', role: 'Respublika administratori', unit: 'Markaziy apparat' },
-  { login: 'konsul.msk', name: 'B. To‘xtayev', role: 'Konsullik xodimi', unit: 'Moskva konsulligi' },
-  { login: 'operator.fargona', name: 'D. Ergasheva', role: 'Viloyat operatori', unit: 'Farg‘ona viloyati' },
-]
+/** Hisoblar administrator panelidagi ro'yxatdan olinadi */
+export const demoUsers = computed(() => db.users.filter((u) => u.status === 'Faol').slice(0, 4))
 
 const PASSWORD = 'demo'
 
@@ -62,10 +57,15 @@ export function useAuth() {
 
     /** @returns {{ok: true} | {ok: false, error: string}} */
     signIn(login, password) {
-      const found = demoUsers.find((u) => u.login === String(login).trim().toLowerCase())
+      const key = String(login).trim().toLowerCase()
+      const found = db.users.find((u) => u.login === key)
       if (!found) return { ok: false, error: 'Bunday foydalanuvchi topilmadi' }
+      if (found.status === 'Bloklangan') {
+        return { ok: false, error: 'Hisob bloklangan — administratorga murojaat qiling' }
+      }
       if (password !== PASSWORD) return { ok: false, error: 'Parol noto‘g‘ri' }
-      state.user = { ...found, at: new Date().toISOString() }
+      const { _id, ...rest } = found
+      state.user = { ...rest, at: new Date().toISOString() }
       persist()
       syncActor()
       return { ok: true }

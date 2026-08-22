@@ -41,6 +41,7 @@ const nav = [
   ]},
   { g: 'Tizim', items: [
     { to: '/admin', icon: 'sliders', label: 'Administrator paneli' },
+    { to: '/users', icon: 'user', label: 'Foydalanuvchilar' },
     { to: '/audit', icon: 'scroll', label: 'Audit va jurnal' },
     { to: '/reports', icon: 'export', label: 'Hisobot va eksport' },
   ]},
