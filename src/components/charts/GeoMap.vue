@@ -10,6 +10,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { fmt, short } from '@/composables/useCountUp'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import { useTheme } from '@/stores/theme'
+
+const { theme } = useTheme()
 
 const props = defineProps({
   countries: { type: Array, required: true },
@@ -21,8 +24,10 @@ const props = defineProps({
 })
 const emit = defineEmits(['select'])
 
-/* Plitka manbai — o'z serveringizga ko'chirish uchun shu ikki qatorni almashtiring */
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+/* Plitka manbai — o'z serveringizga ko'chirish uchun shu ikki qatorni almashtiring.
+   Mavzuga qarab qorong'i yoki yorug' asos tanlanadi. */
+const tileUrl = (t) =>
+  `https://{s}.basemaps.cartocdn.com/${t === 'light' ? 'light_all' : 'dark_all'}/{z}/{x}/{y}{r}.png`
 const TILE_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
 
@@ -301,7 +306,9 @@ onMounted(() => {
     worldCopyJump: true,
     scrollWheelZoom: 'center',
   })
-  L.tileLayer(TILE_URL, { attribution: TILE_ATTR, subdomains: 'abcd', maxZoom: 20 }).addTo(m)
+  layers.value.tiles = L.tileLayer(tileUrl(theme.value), {
+    attribution: TILE_ATTR, subdomains: 'abcd', maxZoom: 20,
+  }).addTo(m)
   L.control.zoom({ position: 'bottomright' }).addTo(m)
 
   // Markaz — Toshkent
@@ -309,7 +316,7 @@ onMounted(() => {
     radius: 7,
     color: '#35e0c8',
     weight: 2,
-    fillColor: '#060c18',
+    fillColor: theme.value === 'light' ? '#ffffff' : '#060c18',
     fillOpacity: 1,
     className: 'gm-origin',
   })
@@ -326,6 +333,11 @@ onMounted(() => {
   m.on('zoomend moveend', declutter)
   requestAnimationFrame(declutter)
   if (!reduced()) raf = requestAnimationFrame(tick)
+})
+
+/* Mavzu almashsa — asos qatlami ham almashadi */
+watch(theme, (t) => {
+  if (layers.value.tiles) layers.value.tiles.setUrl(tileUrl(t))
 })
 
 onBeforeUnmount(() => {
@@ -491,7 +503,7 @@ onBeforeUnmount(() => {
 <!-- Leaflet o'zi yaratgan elementlar uchun — scoped emas -->
 <style>
 .leaflet-container {
-  background: #060c18;
+  background: var(--ink-900);
   font-family: var(--font-body);
   outline: none;
 }
@@ -537,7 +549,7 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   font-size: 11.5px;
   font-weight: 500;
-  color: #e9f1ff;
+  color: var(--snow);
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9);
   transition: opacity 0.35s ease;
 }
@@ -548,7 +560,7 @@ onBeforeUnmount(() => {
   font-family: var(--font-data);
   font-size: 10px;
   font-weight: 400;
-  color: #93a6c2;
+  color: var(--mist);
 }
 
 /* SOS nuqtasi */
@@ -582,7 +594,7 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   border: 1px solid rgba(var(--mist-rgb), 0.28);
   background: rgba(var(--deep-rgb), 0.96);
-  color: #e9f1ff;
+  color: var(--snow);
   box-shadow: 0 22px 50px -24px rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(12px);
   display: grid;
@@ -603,12 +615,12 @@ onBeforeUnmount(() => {
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(var(--mist-rgb), 0.16);
   font-size: 11px;
-  color: #62748f;
+  color: var(--mist-dim);
 }
 .gm-tip i {
   font-style: normal;
   font-size: 11px;
-  color: #93a6c2;
+  color: var(--mist);
 }
 .gm-tip b {
   font-family: var(--font-data);
@@ -623,7 +635,7 @@ onBeforeUnmount(() => {
   width: 30px;
   height: 30px;
   line-height: 29px;
-  color: #93a6c2;
+  color: var(--mist);
   background: rgba(var(--deep-rgb), 0.9);
   border: 1px solid rgba(var(--mist-rgb), 0.14);
   border-radius: 8px;
@@ -640,12 +652,12 @@ onBeforeUnmount(() => {
 
 .leaflet-control-attribution {
   background: rgba(var(--deep-rgb), 0.82) !important;
-  color: #62748f !important;
+  color: var(--mist-dim) !important;
   font-size: 10px !important;
   padding: 2px 7px;
   border-radius: 7px 0 0 0;
 }
-.leaflet-control-attribution a { color: #93a6c2 !important; }
+.leaflet-control-attribution a { color: var(--mist) !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .gm-arc { animation: none; stroke-dasharray: none; }
