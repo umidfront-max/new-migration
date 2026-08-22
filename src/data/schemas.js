@@ -164,7 +164,11 @@ export const schemas = {
       { key: 'status', label: 'Holati', type: 'select', options: opt(['Faol', 'Bloklangan']) },
       { key: 'role', label: 'Roli', type: 'select', required: true, options: roleOpts, span: 2 },
       { key: 'unit', label: 'Tashkilot / bo‘lim', type: 'text', span: 2 },
-      { key: 'phone', label: 'Telefon', type: 'text', span: 2, placeholder: '+998 71 200-10-01' },
+      { key: 'phone', label: 'Telefon', type: 'text', placeholder: '+998 71 200-10-01' },
+      {
+        key: 'password', label: 'Parol', type: 'password',
+        hint: 'kamida 6 ta belgi · ochiq saqlanmaydi, faqat hash yoziladi',
+      },
     ],
   },
 
@@ -190,8 +194,9 @@ export const schemas = {
       { key: 'sent', label: 'Yuborilgan migrantlar', type: 'number' },
       { key: 'remit', label: 'Jo‘natma (mln $)', type: 'number' },
       {
-        key: 'formal', label: 'Rasmiy shartnoma ulushi (%)', type: 'number', min: 0, max: 100, span: 2,
-        hint: 'qolgani norasmiy bandlik deb hisoblanadi',
+        key: 'formal', label: 'Bandlik turi bo‘yicha ulush', type: 'percent', span: 2,
+        labels: ['Rasmiy shartnoma', 'Norasmiy bandlik'],
+        hint: 'rasmiy ulush 60% dan past bo‘lsa tashkilot avtomatik kuzatuvga olinadi',
       },
     ],
   },
@@ -512,6 +517,7 @@ export function blankModel(name) {
     if (f.type === 'number') return null
     if (f.type === 'series') return Array(12).fill(0)
     if (f.type === 'multi') return []
+    if (f.type === 'percent') return 0
     return ''
   }
   const base = Object.fromEntries(s.fields.map((f) => [f.key, empty(f)]))
@@ -522,7 +528,12 @@ export function blankModel(name) {
 export function toFormModel(name, row) {
   const s = schemas[name]
   const src = s.toForm ? s.toForm(row) : row
-  const pick = (f) =>
-    f.type === 'series' || f.type === 'multi' ? [...(src[f.key] || [])] : src[f.key]
+  const pick = (f) => {
+    /* Parol hech qachon formaga qaytarilmaydi — faqat yangisi kiritiladi */
+    if (f.type === 'password') return ''
+    if (f.type === 'series' || f.type === 'multi') return [...(src[f.key] || [])]
+    if (f.type === 'percent') return Number(src[f.key] ?? 0)
+    return src[f.key]
+  }
   return { ...blankModel(name), ...Object.fromEntries(s.fields.map((f) => [f.key, pick(f)])) }
 }

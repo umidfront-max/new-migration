@@ -1,5 +1,6 @@
 import { reactive, computed } from 'vue'
 import { actor, db } from '@/stores/db'
+import { verifyPassword, hasPassword, LEGACY_PASSWORD } from '@/composables/usePassword'
 
 /* ==========================================================================
    Demo autentifikatsiya.
@@ -9,10 +10,12 @@ import { actor, db } from '@/stores/db'
 
 const KEY = 'migrant-session'
 
-/** Hisoblar administrator panelidagi ro'yxatdan olinadi */
-export const demoUsers = computed(() => db.users.filter((u) => u.status === 'Faol').slice(0, 4))
+/** Login sahifasidagi tez kirish — faqat standart paroldagi faol hisoblar */
+export const demoUsers = computed(() =>
+  db.users.filter((u) => u.status === 'Faol' && !hasPassword(u)).slice(0, 4),
+)
 
-const PASSWORD = 'demo'
+export { LEGACY_PASSWORD }
 
 const restore = () => {
   try {
@@ -55,16 +58,22 @@ export function useAuth() {
     user: computed(() => state.user),
     isAuthed: computed(() => !!state.user),
 
-    /** @returns {{ok: true} | {ok: false, error: string}} */
-    signIn(login, password) {
+    /**
+     * Parol hisobda o'rnatilgan bo'lsa hash bo'yicha, aks holda
+     * standart demo paroli bo'yicha tekshiriladi.
+     * @returns {Promise<{ok: true} | {ok: false, error: string}>}
+     */
+    async signIn(login, password) {
       const key = String(login).trim().toLowerCase()
       const found = db.users.find((u) => u.login === key)
       if (!found) return { ok: false, error: 'Bunday foydalanuvchi topilmadi' }
       if (found.status === 'Bloklangan') {
         return { ok: false, error: 'Hisob bloklangan — administratorga murojaat qiling' }
       }
-      if (password !== PASSWORD) return { ok: false, error: 'Parol noto‘g‘ri' }
-      const { _id, ...rest } = found
+      if (!(await verifyPassword(found, password))) {
+        return { ok: false, error: 'Parol noto‘g‘ri' }
+      }
+      const { _id, passwordHash, passwordSalt, ...rest } = found
       state.user = { ...rest, at: new Date().toISOString() }
       persist()
       syncActor()

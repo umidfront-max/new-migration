@@ -31,8 +31,8 @@ const submit = () => {
 
   busy.value = true
   /* Demo: tarmoq kechikishini taqlid qiladi */
-  setTimeout(() => {
-    const res = signIn(login.value, password.value)
+  setTimeout(async () => {
+    const res = await signIn(login.value, password.value)
     busy.value = false
     if (!res.ok) {
       error.value = res.error
@@ -166,7 +166,7 @@ const useDemo = (u) => {
         </button>
 
         <!-- Demo hisoblar — yig'iladigan blok -->
-        <div class="demo" :class="{ on: demoOpen }">
+        <div v-if="demoUsers.length" class="demo" :class="{ on: demoOpen }">
           <button type="button" class="dt" :aria-expanded="demoOpen" @click="demoOpen = !demoOpen">
             <AppIcon name="spark" :size="14" />
             Demo hisob bilan sinab ko‘rish
@@ -179,7 +179,10 @@ const useDemo = (u) => {
                 <b class="num">{{ u.login }}</b>
                 <span>{{ u.role }}</span>
               </button>
-              <p class="dp">Barcha demo hisoblarda parol — <b class="num">demo</b></p>
+              <p class="dp">
+              Bu hisoblarda parol — <b class="num">demo</b>.
+              Administrator paneli orqali qo‘shilgan hisoblar o‘z paroli bilan kiradi.
+            </p>
             </div>
           </Transition>
         </div>
