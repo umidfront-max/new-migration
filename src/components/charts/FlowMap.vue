@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
 import { useMotionOk } from '@/composables/useMotion'
 import { fmt, short } from '@/composables/useCountUp'
 import { db } from '@/stores/db'
-import { uzOutline, uzRegions, tashkentDistricts, tashkentBox } from '@/data/uzbekistan'
+import { uzOutline, uzRegions, tashkentDistricts } from '@/data/uzbekistan'
 
 const props = defineProps({
   countries: { type: Array, required: true },
@@ -28,28 +28,6 @@ const activeRegion = computed(() =>
   regionShapes.value.find((r) => r.name === hoverRegion.value),
 )
 
-/* ------------------------------------------- Toshkent viloyati inseti
-   Viloyat kichik bo'lgani uchun burchakda kattalashtirib ko'rsatiladi. */
-const INSET = { x: 16, y: 14, w: 182, h: 190 }
-const hoverDistrict = ref(null)
-
-const inset = computed(() => {
-  const b = tashkentBox
-  const bw = b.maxX - b.minX
-  const bh = b.maxY - b.minY
-  const pad = 16
-  const k = Math.min((INSET.w - pad * 2) / bw, (INSET.h - pad * 2 - 16) / bh)
-  const cx = INSET.x + INSET.w / 2
-  const cy = INSET.y + (INSET.h + 16) / 2
-  return {
-    k: +k.toFixed(3),
-    transform: `translate(${cx.toFixed(1)} ${cy.toFixed(1)}) scale(${k.toFixed(3)}) ` +
-      `translate(${(-(b.minX + b.maxX) / 2).toFixed(2)} ${(-(b.minY + b.maxY) / 2).toFixed(2)})`,
-  }
-})
-
-const tashkent = computed(() => uzRegions.find((r) => r.capital))
-const tashkentStat = computed(() => db.regions.find((r) => r.name === 'Toshkent viloyati'))
 
 const W = 900
 const H = 560
@@ -209,29 +187,6 @@ const isDim = (code) => active.value && active.value !== code
       <text :x="CX" :y="CY + 26" class="coreTxt">TOSHKENT VILOYATI</text>
       <text :x="CX - 52" :y="CY + 74" class="coreLbl">O‘ZBEKISTON</text>
 
-      <!-- Toshkent viloyati — kattalashtirilgan chizma va tumanlar -->
-      <g class="inset">
-        <rect :x="INSET.x" :y="INSET.y" :width="INSET.w" :height="INSET.h" rx="14" class="inBox" />
-        <text :x="INSET.x + 13" :y="INSET.y + 20" class="inTtl">TOSHKENT VILOYATI</text>
-        <text :x="INSET.x + INSET.w - 13" :y="INSET.y + 20" class="inK num">
-          ×{{ Math.round(inset.k) }}
-        </text>
-
-        <g :transform="inset.transform">
-          <path :d="tashkent.d" class="inFill" />
-          <path
-            v-for="d in tashkentDistricts" :key="'in' + d.name" :d="d.d"
-            class="inDst" :class="{ on: hoverDistrict === d.name }"
-            @mouseenter="hoverDistrict = d.name" @mouseleave="hoverDistrict = null"
-          />
-          <path :d="tashkent.d" class="inLine" />
-          <circle :r="(3.2 / inset.k).toFixed(2)" class="inOrigin" />
-        </g>
-
-        <text :x="INSET.x + INSET.w / 2" :y="INSET.y + INSET.h - 9" class="inFoot">
-          {{ hoverDistrict ? hoverDistrict + ' tumani' : tashkentDistricts.length + ' ta tuman' }}
-        </text>
-      </g>
 
       <!-- Tugunlar -->
       <g
@@ -368,47 +323,6 @@ const isDim = (code) => active.value && active.value !== code
   animation: pulse-ring 2.8s var(--ease-out) infinite;
 }
 .originIn { fill: var(--saffron); pointer-events: none; }
-
-/* ------------------------------------ Toshkent viloyati inseti */
-.inBox {
-  fill: rgba(var(--deep-rgb), 0.72);
-  stroke: var(--line-strong);
-  stroke-width: 1;
-}
-.inTtl {
-  fill: var(--turk);
-  font-family: var(--font-data);
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-.inK { fill: var(--mist-dim); font-size: 9px; text-anchor: end; }
-
-.inFill { fill: rgba(var(--turk-rgb), 0.1); stroke: none; }
-.inLine {
-  fill: none;
-  stroke: var(--turk);
-  stroke-width: 1.8;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  pointer-events: none;
-}
-.inDst {
-  fill: rgba(var(--turk-rgb), 0.06);
-  stroke: rgba(var(--turk-rgb), 0.55);
-  stroke-width: 1;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  cursor: pointer;
-  transition: fill 0.25s var(--ease-out);
-}
-.inDst:hover, .inDst.on { fill: rgba(var(--turk-rgb), 0.38); }
-.inOrigin { fill: var(--saffron); pointer-events: none; }
-.inFoot {
-  fill: var(--mist);
-  font-size: 9.5px;
-  text-anchor: middle;
-}
 
 /* hudud kartochkasi */
 .rTip {

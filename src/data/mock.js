@@ -331,6 +331,28 @@ export const integrations = [
   'HUMO', 'UZCARD', 'Click', 'Payme', 'Aviakompaniyalar', 'Temir yo‘l', 'Interpol', 'IOM',
 ].map((name) => ({ name, status: 'Rejada' }))
 
+/* ------------------------------------------- Toshkent viloyati tumanlari
+   Nomlar src/data/uzbekistan.js dagi chegara nomlari bilan bir xil bo'lishi
+   shart — xarita shu nom orqali ko'rsatkichni topadi.
+   Yig'indi: chiqqan 31 200, qaytgan 22 800 — `regions` dagi viloyat qatori. */
+export const districts = [
+  { name: 'Zangiota', out: 3800, back: 2780, risk: 34 },
+  { name: 'Yangiyo‘l', out: 3200, back: 2340, risk: 31 },
+  { name: 'Qibray', out: 2900, back: 2120, risk: 26 },
+  { name: 'O‘rta Chirchiq', out: 2400, back: 1750, risk: 33 },
+  { name: 'Bekobod', out: 2300, back: 1680, risk: 41 },
+  { name: 'Ohangaron', out: 2200, back: 1610, risk: 38 },
+  { name: 'Chinoz', out: 2000, back: 1460, risk: 29 },
+  { name: 'Yuqori Chirchiq', out: 1900, back: 1390, risk: 30 },
+  { name: 'Quyi Chirchiq', out: 1800, back: 1310, risk: 32 },
+  { name: 'Toshkent tumani', out: 1750, back: 1280, risk: 24 },
+  { name: 'Parkent', out: 1700, back: 1240, risk: 27 },
+  { name: 'Bo‘ka', out: 1600, back: 1170, risk: 36 },
+  { name: 'Piskent', out: 1450, back: 1060, risk: 28 },
+  { name: 'Oqqo‘rg‘on', out: 1300, back: 950, risk: 35 },
+  { name: 'Bo‘stonliq', out: 900, back: 660, risk: 19 },
+]
+
 /* ------------------------------------------ Qo'shimcha KPI qatorlari */
 export const borderStats = [
   { label: 'Rad etilgan o‘tishlar', value: 184, delta: -8.4, tone: 'saffron', sub: 'hujjat nomuvofiqligi' },

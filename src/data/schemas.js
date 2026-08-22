@@ -98,6 +98,21 @@ export const schemas = {
     ],
   },
 
+  districts: {
+    label: 'Tuman',
+    title: { add: 'Yangi tuman qo‘shish', edit: 'Tuman ko‘rsatkichlarini tahrirlash' },
+    defaults: () => ({ out: 0, back: 0, risk: 30 }),
+    fields: [
+      {
+        key: 'name', label: 'Tuman nomi', type: 'text', required: true, span: 2,
+        hint: 'chegara chizmasidagi nom bilan bir xil bo‘lishi kerak',
+      },
+      { key: 'out', label: 'Chiqqanlar', type: 'number' },
+      { key: 'back', label: 'Qaytganlar', type: 'number' },
+      { key: 'risk', label: 'Xavf darajasi', type: 'number', min: 0, max: 100, span: 2 },
+    ],
+  },
+
   employers: {
     label: 'Ish beruvchi',
     title: { add: 'Yangi ish beruvchi qo‘shish', edit: 'Ish beruvchini tahrirlash' },

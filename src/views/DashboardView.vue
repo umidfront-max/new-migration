@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import StatTile from '@/components/ui/StatTile.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import FlowMap from '@/components/charts/FlowMap.vue'
+import RegionMap from '@/components/charts/RegionMap.vue'
 import AreaTrend from '@/components/charts/AreaTrend.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
 import BarRank from '@/components/charts/BarRank.vue'
@@ -17,7 +17,6 @@ import { db, serie, setting } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { months } from '@/data/mock'
 
-const countries = db.countries
 const regions = db.regions
 const violations = db.violations
 const kpis = db.kpis
@@ -42,7 +41,7 @@ const edit = (c, row) => {
 }
 
 const router = useRouter()
-const { state, selectCountry, setRegion } = useApp()
+const { state } = useApp()
 
 const topRegions = computed(() =>
   regions.slice(0, 8).map((r) => ({ name: r.name, value: r.out, value2: r.back, risk: r.risk })),
@@ -73,21 +72,21 @@ const violationTotal = computed(() => violations.reduce((a, b) => a + b.value, 0
       />
     </div>
 
-    <!-- Signature: oqim xaritasi -->
+    <!-- Signature: Toshkent viloyati tuman kesimida -->
     <PanelCard
-      eyebrow="Yo‘nalishlar" title="Migratsiya oqimi"
-      hint="Aylanani bosing — shu davlat bo‘yicha barcha panellar filtrlanadi"
+      eyebrow="Hudud kesimi" title="Toshkent viloyati"
+      hint="Tumanni bosing — ko‘rsatkichlarini shu yerda tahrirlash mumkin"
       glow="turk" class="enter" :style="{ '--i': 4 }" :pad="false"
     >
       <template #actions>
+        <button class="btn add" @click="add('districts')">
+          <AppIcon name="plus" :size="14" /> Tuman qo‘shish
+        </button>
         <button class="btn" @click="router.push('/countries')">
-          Batafsil <AppIcon name="chevron" :size="14" />
+          Davlatlar xaritasi <AppIcon name="chevron" :size="14" />
         </button>
       </template>
-      <div class="mapWrap">
-        <FlowMap :countries="countries" :selected="state.country"
-                 @select="selectCountry" @region="setRegion" />
-      </div>
+      <RegionMap @pick="edit('districts', $event)" />
     </PanelCard>
 
     <!-- Dinamika + tarkib -->
@@ -216,7 +215,6 @@ const violationTotal = computed(() => violations.reduce((a, b) => a + b.value, 0
 .r-1-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
 .r-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-.mapWrap { padding: 4px 14px 18px; }
 
 .btn {
   display: inline-flex;

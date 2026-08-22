@@ -12,7 +12,7 @@ const KEY = 'migrant-db-v2'
 /** Foydalanuvchi qo'sha va tahrirlay oladigan barcha to'plamlar */
 export const COLLECTIONS = [
   /* asosiy reyestrlar */
-  'migrants', 'countries', 'regions', 'employers',
+  'migrants', 'countries', 'regions', 'districts', 'employers',
   'borderPoints', 'roles', 'violations', 'sosEvents',
   /* ko'rsatkichlar va grafiklar */
   'kpis', 'composition', 'purposes', 'series',
@@ -72,7 +72,7 @@ watch(
 export const actor = reactive({ user: 'admin.root', role: 'Super administrator' })
 
 const LABELS = {
-  migrants: 'Reyestr yozuvi', countries: 'Davlat', regions: 'Hudud',
+  migrants: 'Reyestr yozuvi', countries: 'Davlat', regions: 'Hudud', districts: 'Tuman',
   employers: 'Ish beruvchi', borderPoints: 'O‘tkazish punkti', roles: 'Rol',
   violations: 'Qonunbuzilish turi', sosEvents: 'SOS murojaat',
   kpis: 'KPI', composition: 'Tarkib ko‘rsatkichi', purposes: 'Chiqish maqsadi',
