@@ -175,29 +175,41 @@ export const schemas = {
   employers: {
     label: 'Ish beruvchi',
     title: { add: 'Yangi ish beruvchi qo‘shish', edit: 'Ish beruvchini tahrirlash' },
-    derive: (v) => ({ ...v, countries: [...(v.countries || [])] }),
+    /* Tanlov saqlanadi; `formal` ko'rsatkichlar uchun undan kelib chiqadi */
+    derive: (v) => ({
+      ...v,
+      countries: [...(v.countries || [])],
+      formal: v.employment === 'Rasmiy shartnoma' ? 100 : 0,
+    }),
     toForm: (r) => ({
       ...r,
+      employment: r.employment || (r.formal >= 50 ? 'Rasmiy shartnoma' : 'Norasmiy bandlik'),
       countries: Array.isArray(r.countries)
         ? [...r.countries]
         : String(r.countries || '').split(',').map((x) => x.trim()).filter(Boolean),
     }),
-    defaults: () => ({ status: 'Kuzatuvda', sent: 0, formal: 60, remit: 0, countries: [] }),
+    defaults: () => ({
+      status: 'Kuzatuvda',
+      employment: 'Rasmiy shartnoma',
+      sent: 0,
+      remit: 0,
+      countries: [],
+    }),
     fields: [
       { key: 'name', label: 'Kompaniya nomi', type: 'text', required: true, span: 2 },
       { key: 'dir', label: 'Yo‘nalishi', type: 'select', required: true, options: opt(['Qurilish', 'Logistika', 'Servis', 'Yengil sanoat', 'Qishloq xo‘jaligi', 'IT', 'Tibbiyot', 'Boshqa']) },
       { key: 'status', label: 'Holati', type: 'select', options: opt(['Tasdiqlangan', 'Kuzatuvda', 'Cheklangan']) },
+      {
+        key: 'employment', label: 'Shartnoma', type: 'select', required: true, span: 2,
+        options: opt(['Rasmiy shartnoma', 'Norasmiy bandlik']),
+        hint: 'norasmiy bandlikdagi tashkilot avtomatik kuzatuvga olinadi',
+      },
       {
         key: 'countries', label: 'Qaysi davlatlarga yuboradi', type: 'multi', span: 2,
         required: true, options: countryNameOpts, hint: 'bir nechtasini tanlash mumkin',
       },
       { key: 'sent', label: 'Yuborilgan migrantlar', type: 'number' },
       { key: 'remit', label: 'Jo‘natma (mln $)', type: 'number' },
-      {
-        key: 'formal', label: 'Bandlik turi bo‘yicha ulush', type: 'percent', span: 2,
-        labels: ['Rasmiy shartnoma', 'Norasmiy bandlik'],
-        hint: 'rasmiy ulush 60% dan past bo‘lsa tashkilot avtomatik kuzatuvga olinadi',
-      },
     ],
   },
 
@@ -517,7 +529,6 @@ export function blankModel(name) {
     if (f.type === 'number') return null
     if (f.type === 'series') return Array(12).fill(0)
     if (f.type === 'multi') return []
-    if (f.type === 'percent') return 0
     return ''
   }
   const base = Object.fromEntries(s.fields.map((f) => [f.key, empty(f)]))
@@ -532,7 +543,6 @@ export function toFormModel(name, row) {
     /* Parol hech qachon formaga qaytarilmaydi — faqat yangisi kiritiladi */
     if (f.type === 'password') return ''
     if (f.type === 'series' || f.type === 'multi') return [...(src[f.key] || [])]
-    if (f.type === 'percent') return Number(src[f.key] ?? 0)
     return src[f.key]
   }
   return { ...blankModel(name), ...Object.fromEntries(s.fields.map((f) => [f.key, pick(f)])) }

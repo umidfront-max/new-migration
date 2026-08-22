@@ -215,12 +215,12 @@ export const migrants = Array.from({ length: 96 }, (_, i) => {
 
 /* ------------------------------------------------------ Ish beruvchilar */
 export const employers = [
-  { name: 'Hanwha Construction', dir: 'Qurilish', countries: ['Janubiy Koreya'], sent: 4120, formal: 100, remit: 186, status: 'Tasdiqlangan' },
-  { name: 'Ozon Logistics', dir: 'Logistika', countries: ['Rossiya'], sent: 12840, formal: 92, remit: 412, status: 'Tasdiqlangan' },
-  { name: 'Emaar Facilities', dir: 'Servis', countries: ['BAA'], sent: 3610, formal: 98, remit: 148, status: 'Tasdiqlangan' },
-  { name: 'Stroy Grand LLC', dir: 'Qurilish', countries: ['Rossiya', 'Qozog‘iston'], sent: 8940, formal: 61, remit: 214, status: 'Kuzatuvda' },
-  { name: 'Anadolu Tekstil', dir: 'Yengil sanoat', countries: ['Turkiya'], sent: 5270, formal: 74, remit: 132, status: 'Kuzatuvda' },
-  { name: 'MegaAgro Group', dir: 'Qishloq xo‘jaligi', countries: ['Polsha'], sent: 2180, formal: 38, remit: 61, status: 'Cheklangan' },
+  { name: 'Hanwha Construction', dir: 'Qurilish', countries: ['Janubiy Koreya'], sent: 4120, employment: 'Rasmiy shartnoma', formal: 100, remit: 186, status: 'Tasdiqlangan' },
+  { name: 'Ozon Logistics', dir: 'Logistika', countries: ['Rossiya'], sent: 12840, employment: 'Rasmiy shartnoma', formal: 100, remit: 412, status: 'Tasdiqlangan' },
+  { name: 'Emaar Facilities', dir: 'Servis', countries: ['BAA'], sent: 3610, employment: 'Rasmiy shartnoma', formal: 100, remit: 148, status: 'Tasdiqlangan' },
+  { name: 'Stroy Grand LLC', dir: 'Qurilish', countries: ['Rossiya', 'Qozog‘iston'], sent: 8940, employment: 'Norasmiy bandlik', formal: 0, remit: 214, status: 'Kuzatuvda' },
+  { name: 'Anadolu Tekstil', dir: 'Yengil sanoat', countries: ['Turkiya'], sent: 5270, employment: 'Norasmiy bandlik', formal: 0, remit: 132, status: 'Kuzatuvda' },
+  { name: 'MegaAgro Group', dir: 'Qishloq xo‘jaligi', countries: ['Polsha'], sent: 2180, employment: 'Norasmiy bandlik', formal: 0, remit: 61, status: 'Cheklangan' },
 ]
 
 /* ------------------------------------------------------- Konsullik */

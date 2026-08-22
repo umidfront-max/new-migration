@@ -19,6 +19,9 @@ const avgFormal = computed(() =>
 
 const statusTone = { 'Tasdiqlangan': 'turk', 'Kuzatuvda': 'saffron', 'Cheklangan': 'coral' }
 
+/** Shartnoma turi — eski yozuvlarda faqat foiz bo'lishi mumkin */
+const employmentOf = (e) => e.employment || (e.formal >= 50 ? 'Rasmiy shartnoma' : 'Norasmiy bandlik')
+
 const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved } = useRecordModal({
   added: 'Ish beruvchi reyestrga qo‘shildi',
   updated: 'Tashkilot ma’lumoti yangilandi',
@@ -39,13 +42,13 @@ const formalSplit = computed(() => {
     <div class="v-kpis">
       <StatTile label="Ro‘yxatdagi ish beruvchilar" :value="employers.length * 34" :delta="7.2" tone="lapis" sub="tashkilotlar" class="enter" />
       <StatTile label="Yuborilgan migrantlar" :value="totalSent" :delta="5.8" tone="turk" sub="joriy yilda" :delay="120" class="enter" :style="{ '--i': 1 }" />
-      <StatTile label="Rasmiy shartnoma ulushi" :value="avgFormal" :delta="3.4" tone="saffron" sub="foizda, o‘rtacha" :delay="240" class="enter" :style="{ '--i': 2 }" />
+      <StatTile label="Rasmiy shartnoma bilan" :value="avgFormal" :delta="3.4" tone="saffron" sub="yuborilganlarning foizi" :delay="240" class="enter" :style="{ '--i': 2 }" />
       <StatTile label="Pul jo‘natmalari" :value="totalRemit" :delta="9.1" tone="violet" sub="mln $ / yil" :delay="360" class="enter" :style="{ '--i': 3 }" />
     </div>
 
     <div class="v-2-1">
       <PanelCard eyebrow="Reyestr" title="Ish beruvchilar"
-                 hint="Rasmiy shartnoma ulushi 60% dan past bo‘lsa tashkilot avtomatik kuzatuvga olinadi"
+                 hint="Norasmiy bandlik bilan ishlaydigan tashkilotlar avtomatik kuzatuvga olinadi"
                  class="enter" :style="{ '--i': 4 }">
         <template #actions>
           <button class="v-btn add" @click="openAdd">
@@ -62,7 +65,7 @@ const formalSplit = computed(() => {
             <thead>
               <tr>
                 <th>Kompaniya</th><th>Yo‘nalishi</th><th>Davlatlar</th>
-                <th>Yuborilgan</th><th>Rasmiy / norasmiy</th><th>Jo‘natma</th><th>Holati</th><th></th>
+                <th>Yuborilgan</th><th>Shartnoma</th><th>Jo‘natma</th><th>Holati</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -72,15 +75,9 @@ const formalSplit = computed(() => {
                 <td class="muted">{{ (e.countries || []).join(', ') }}</td>
                 <td class="num">{{ fmt(e.sent) }}</td>
                 <td>
-                  <div class="fm">
-                    <div class="v-meter" :style="{ '--i': i }">
-                      <i :style="{ width: e.formal + '%', background: e.formal >= 80 ? 'var(--turk)' : e.formal >= 60 ? 'var(--saffron)' : 'var(--coral)' }" />
-                    </div>
-                    <span class="split">
-                      <b class="num ok">{{ e.formal }}%</b>
-                      <span class="num bad">{{ 100 - e.formal }}%</span>
-                    </span>
-                  </div>
+                  <span class="st" :class="employmentOf(e) === 'Rasmiy shartnoma' ? 's-turk' : 's-coral'">
+                    {{ employmentOf(e) }}
+                  </span>
                 </td>
                 <td class="num">{{ e.remit }} mln $</td>
                 <td>
@@ -115,14 +112,8 @@ const formalSplit = computed(() => {
 </template>
 
 <style scoped>
-.split { display: inline-flex; align-items: baseline; gap: 5px; white-space: nowrap; }
-.split .ok { font-size: 11.5px; color: var(--turk); }
-.split .bad { font-size: 11px; color: var(--coral); }
-.split .bad::before { content: '/'; margin-right: 4px; color: var(--mist-dim); }
 
 .nm { font-weight: 500; white-space: nowrap; }
-.fm { display: flex; align-items: center; gap: 9px; }
-.sm { font-size: 11px; color: var(--mist); }
 .st {
   padding: 3px 10px;
   border-radius: 99px;

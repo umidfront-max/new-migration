@@ -28,9 +28,6 @@ const revealed = ref({})
 
 const optionsOf = (f) => (typeof f.options === 'function' ? f.options() : f.options || [])
 
-/** `percent` maydonining ikkinchi ulushi — 100 dan ayirma */
-const rest = (key) => Math.max(0, Math.min(100, 100 - Number(form.value[key] || 0)))
-
 /** `multi` maydonda variantni qo'shish yoki olib tashlash */
 const toggleMulti = (key, value) => {
   const list = form.value[key] || []
@@ -177,35 +174,6 @@ const destroy = () => {
                 <span class="boolTxt">{{ form[f.key] ? 'Ha' : 'Yo‘q' }}</span>
               </span>
 
-              <span v-else-if="f.type === 'percent'" class="pc">
-                <span class="pcBar">
-                  <i class="a" :style="{ width: (form[f.key] || 0) + '%' }" />
-                  <i class="b" :style="{ width: rest(f.key) + '%' }" />
-                </span>
-                <input
-                  class="pcRange" type="range" min="0" max="100" step="1"
-                  :value="form[f.key] || 0"
-                  @input="form[f.key] = Number($event.target.value)"
-                  :aria-label="f.label"
-                />
-                <span class="pcRow">
-                  <span class="pcSide a">
-                    <b class="num">{{ form[f.key] || 0 }}%</b>
-                    {{ f.labels?.[0] || 'Birinchi ulush' }}
-                  </span>
-                  <input
-                    class="pcNum num" type="number" min="0" max="100"
-                    :value="form[f.key] || 0"
-                    @input="form[f.key] = Math.max(0, Math.min(100, Number($event.target.value) || 0))"
-                    :aria-label="f.label + ' — foizda'"
-                  />
-                  <span class="pcSide b">
-                    <b class="num">{{ rest(f.key) }}%</b>
-                    {{ f.labels?.[1] || 'Ikkinchi ulush' }}
-                  </span>
-                </span>
-              </span>
-
               <span v-else-if="f.type === 'password'" class="pw">
                 <input
                   v-model="form[f.key]"
@@ -343,59 +311,6 @@ header h3 { font-size: 17px; margin-top: 4px; }
 
 .lb { font-size: 11.5px; color: var(--mist-dim); }
 .req { color: var(--coral); font-style: normal; margin-left: 3px; }
-
-/* ulush maydoni: rasmiy / norasmiy */
-.pc { display: grid; gap: 9px; }
-.pcBar {
-  display: flex;
-  height: 9px;
-  border-radius: 99px;
-  overflow: hidden;
-  background: rgba(var(--mist-rgb), 0.12);
-}
-.pcBar i { display: block; height: 100%; transition: width 0.25s var(--ease-out); }
-.pcBar .a { background: var(--turk); }
-.pcBar .b { background: var(--coral); }
-
-.pcRange {
-  width: 100%;
-  height: 4px;
-  padding: 0 !important;
-  border: none !important;
-  border-radius: 99px;
-  background: rgba(var(--mist-rgb), 0.18) !important;
-  appearance: none;
-  cursor: pointer;
-}
-.pcRange::-webkit-slider-thumb {
-  appearance: none;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  border: 2px solid var(--ink-900);
-  background: var(--snow);
-  cursor: pointer;
-}
-.pcRange::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  border: 2px solid var(--ink-900);
-  background: var(--snow);
-  cursor: pointer;
-}
-
-.pcRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.pcSide { display: grid; gap: 1px; font-size: 10.5px; color: var(--mist-dim); }
-.pcSide b { font-size: 15px; }
-.pcSide.a b { color: var(--turk); }
-.pcSide.b { text-align: right; }
-.pcSide.b b { color: var(--coral); }
-.pcNum {
-  width: 74px;
-  text-align: center;
-  flex-shrink: 0;
-}
 
 /* parol */
 .pw { position: relative; display: flex; align-items: center; }
