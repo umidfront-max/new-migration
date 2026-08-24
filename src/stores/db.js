@@ -32,6 +32,16 @@ const state = reactive({
   loadedAt: null,
 })
 
+/**
+ * Serverda hisoblangan yig'ma ko'rsatkichlar (`/dashboard/summary/`).
+ * Sarlavha va izohlardagi raqamlar shu yerdan olinadi — frontend
+ * hech narsani o'zi taxmin qilmaydi.
+ */
+export const summary = reactive({
+  countries: {}, regions: {}, border: {}, registry: {},
+  employers: {}, sos: {}, violations: {},
+})
+
 /** Yuklanish holati — sahifalar shu bo'yicha ekran ko'rsatadi */
 export const status = readonly(state)
 
@@ -41,6 +51,12 @@ export const actor = reactive({ user: 'mehmon', role: '—' })
 /* ------------------------------------------------------------- yuklash */
 
 let inflight = null
+
+/** Yig'ma ko'rsatkichlarni serverdan o'qiydi */
+export async function loadSummary() {
+  Object.assign(summary, await api.get('/dashboard/summary/'))
+  return summary
+}
 
 /** Bitta to'plamni serverdan qayta o'qiydi */
 export async function loadCollection(name, signal) {
@@ -78,6 +94,7 @@ export function loadAll({ force = false } = {}) {
   state.error = null
 
   inflight = runPooled(COLLECTIONS, (name) => loadCollection(name))
+    .then(() => loadSummary())
     .then(() => {
       state.ready = true
       state.loadedAt = new Date().toISOString()

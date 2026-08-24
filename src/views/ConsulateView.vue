@@ -12,6 +12,22 @@ import { useRecordModal } from '@/composables/useRecords'
 const countries = db.countries
 const consulate = db.consulate
 const services = db.consulateServices
+const cases = db.consulateCases
+
+/** Kanban ustunlari — bosqichlar bazadagi yozuvlardan yig'iladi */
+const STAGES = [
+  { key: 'new', label: 'Yangi murojaatlar' },
+  { key: 'review', label: 'Ko‘rib chiqilmoqda' },
+  { key: 'waiting', label: 'Hujjat kutilmoqda' },
+  { key: 'closed', label: 'Yopilgan' },
+]
+
+const board = computed(() =>
+  STAGES.map((stage) => {
+    const rows = cases.filter((row) => row.stage === stage.key)
+    return { ...stage, count: rows.length, rows: rows.slice(0, 3) }
+  }),
+)
 /* Qo'shish / tahrirlash */
 const target = ref('consulate')
 const { modal, editing, flash, openEdit, close, onSaved, onRemoved } = useRecordModal()
@@ -26,13 +42,17 @@ const edit = (c, row) => {
 }
 
 
+/* Murojaat va yordam sonlari bazadagi maydonlardan olinadi */
 const byMission = computed(() =>
-  [...countries].sort((a, b) => b.total - a.total).slice(0, 7).map((c) => ({
-    name: `${c.flag} ${c.name}`,
-    value: Math.round(c.total / 118),
-    value2: Math.round(c.total / 145),
-    risk: c.risk,
-  })),
+  [...countries]
+    .sort((a, b) => (b.consulateRequests || 0) - (a.consulateRequests || 0))
+    .slice(0, 7)
+    .map((c) => ({
+      name: `${c.flag} ${c.name}`,
+      value: c.consulateRequests || 0,
+      value2: c.consulateHelped || 0,
+      risk: c.risk,
+    })),
 )
 
 </script>
@@ -74,17 +94,24 @@ const byMission = computed(() =>
     </div>
 
     <PanelCard eyebrow="Kabinet" title="Konsullik xodimi uchun ish oynasi"
-               hint="Ushbu bo‘limga faqat konsullik roli bilan kirish mumkin"
+               :hint="`${cases.length} ta ish yuritilmoqda · yozuvni bosib tahrirlash mumkin`"
                class="enter" :style="{ '--i': 6 }">
+      <template #actions>
+        <button class="v-btn add" @click="add('consulateCases')">
+          <AppIcon name="plus" :size="14" /> Ish qo‘shish
+        </button>
+      </template>
       <div class="q">
-        <div v-for="(s, i) in ['Yangi murojaatlar', 'Ko‘rib chiqilmoqda', 'Hujjat kutilmoqda', 'Yopilgan']"
-             :key="s" class="col" :style="{ '--i': i }">
-          <p class="ct">{{ s }}<span class="num cnt">{{ [24, 41, 12, 186][i] }}</span></p>
+        <div v-for="(column, i) in board" :key="column.key" class="col" :style="{ '--i': i }">
+          <p class="ct">{{ column.label }}<span class="num cnt">{{ column.count }}</span></p>
           <div class="cards">
-            <div v-for="k in (i === 3 ? 2 : 3)" :key="k" class="mini" :style="{ '--k': k }">
-              <span class="mid num">CN-{{ 4820 + i * 7 + k }}</span>
-              <span class="mtx">{{ ['Pasport yo‘qolgan', 'Ish haqi to‘lanmagan', 'Tibbiy yordam', 'Qaytish yo‘llanmasi'][(i + k) % 4] }}</span>
-            </div>
+            <button v-for="(row, k) in column.rows" :key="row._id" class="mini"
+                    :style="{ '--k': k + 1 }" @click="edit('consulateCases', row)">
+              <span class="mid num">{{ row.code }}</span>
+              <span class="mtx">{{ row.subject }}</span>
+              <span class="mfl">{{ row.flag }} {{ row.name || '—' }}</span>
+            </button>
+            <p v-if="!column.rows.length" class="mEmpty">Yozuv yo‘q</p>
           </div>
         </div>
       </div>

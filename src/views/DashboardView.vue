@@ -13,7 +13,7 @@ import SosFeed from '@/components/panels/SosFeed.vue'
 import { useApp } from '@/stores/app'
 import { fmt } from '@/composables/useCountUp'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, serie, setting } from '@/stores/db'
+import { db, serie, setting, summary } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { months } from '@/data/labels'
 
@@ -47,7 +47,14 @@ const topRegions = computed(() =>
   regions.slice(0, 8).map((r) => ({ name: r.name, value: r.out, value2: r.back, risk: r.risk })),
 )
 
-const violationTotal = computed(() => violations.reduce((a, b) => a + b.value, 0))
+const violationTotal = computed(() => summary.violations.total ?? 0)
+
+/** Ayollar ulushi — tarkib ko'rsatkichlaridan hisoblanadi */
+const womenShare = computed(() => {
+  const total = composition.reduce((sum, item) => sum + (item.value || 0), 0)
+  const women = composition.find((item) => item.label === 'Ayollar')?.value || 0
+  return total ? ((women / total) * 100).toFixed(1) : '0.0'
+})
 </script>
 
 <template>
@@ -125,8 +132,8 @@ const violationTotal = computed(() => violations.reduce((a, b) => a + b.value, 0
                :title="c.label" />
         </div>
         <p class="note">
-          Ayollar ulushi <b class="num">18.7%</b> — o‘tgan yilga nisbatan 2.4 p.p. yuqori.
-          Voyaga yetmaganlar alohida nazoratda.
+          Ayollar ulushi <b class="num">{{ womenShare }}%</b> — tarkib ko‘rsatkichlari
+          bo‘yicha hisoblangan. Voyaga yetmaganlar alohida nazoratda.
         </p>
       </PanelCard>
     </div>

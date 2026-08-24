@@ -5,7 +5,7 @@ import StatTile from '@/components/ui/StatTile.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, exportCollection } from '@/stores/db'
+import { db, exportCollection, summary } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -13,9 +13,8 @@ const employers = db.employers
 
 const totalSent = computed(() => employers.reduce((a, e) => a + e.sent, 0))
 const totalRemit = computed(() => employers.reduce((a, e) => a + e.remit, 0))
-const avgFormal = computed(() =>
-  totalSent.value ? Math.round(employers.reduce((a, e) => a + e.formal * e.sent, 0) / totalSent.value) : 0,
-)
+/* Rasmiy ulush serverda hisoblanadi — mahalliy taxmin emas */
+const avgFormal = computed(() => summary.employers.formalShare ?? 0)
 
 const statusTone = { 'Tasdiqlangan': 'turk', 'Kuzatuvda': 'saffron', 'Cheklangan': 'coral' }
 
@@ -44,7 +43,8 @@ const formalSplit = computed(() => {
 <template>
   <div class="v-page">
     <div class="v-kpis">
-      <StatTile label="Ro‘yxatdagi ish beruvchilar" :value="employers.length * 34" :delta="7.2" tone="lapis" sub="tashkilotlar" class="enter" />
+      <StatTile label="Ro‘yxatdagi ish beruvchilar" :value="summary.employers.count || employers.length"
+                :delta="7.2" tone="lapis" sub="tashkilotlar" class="enter" />
       <StatTile label="Yuborilgan migrantlar" :value="totalSent" :delta="5.8" tone="turk" sub="joriy yilda" :delay="120" class="enter" :style="{ '--i': 1 }" />
       <StatTile label="Rasmiy shartnoma bilan" :value="avgFormal" :delta="3.4" tone="saffron" sub="yuborilganlarning foizi" :delay="240" class="enter" :style="{ '--i': 2 }" />
       <StatTile label="Pul jo‘natmalari" :value="totalRemit" :delta="9.1" tone="violet" sub="mln $ / yil" :delay="360" class="enter" :style="{ '--i': 3 }" />

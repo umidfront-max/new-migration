@@ -28,11 +28,12 @@ const edit = (c, row) => {
   openEdit(row)
 }
 
+/* Ish bilan ta'minlanganlar soni bazadagi maydon — taxmin emas */
 const byRegion = computed(() =>
   [...regions].sort((a, b) => b.back - a.back).slice(0, 8).map((r) => ({
     name: r.name,
     value: r.back,
-    value2: Math.round(r.back * 0.47),
+    value2: r.employed || 0,
     risk: r.risk,
   })),
 )

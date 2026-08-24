@@ -94,6 +94,7 @@ export const schemas = {
       flag: '🏳️', angle: 0, dist: 1000, risk: 30, total: 0, out: 0, back: 0,
       remit: 0, remitCount: 0, wanted: 0, jailed: 0, missing: 0,
       work: 0, study: 0, medical: 0, residence: 0, travel: 0,
+      consulateRequests: 0, consulateHelped: 0, violationCount: 0,
     }),
     fields: [
       { key: 'code', label: 'Kod', type: 'text', required: true, hint: 'ISO-2, masalan RU' },
@@ -118,19 +119,23 @@ export const schemas = {
       { key: 'wanted', label: 'Qidiruvdagilar', type: 'number' },
       { key: 'jailed', label: 'Jazoni o‘tayotganlar', type: 'number', hint: 'JMda' },
       { key: 'missing', label: 'Bedarak yo‘qolganlar', type: 'number' },
+      { key: 'consulateRequests', label: 'Konsullikka murojaatlar', type: 'number' },
+      { key: 'consulateHelped', label: 'Yordam ko‘rsatilgan', type: 'number' },
+      { key: 'violationCount', label: 'Qonunbuzilish holatlari', type: 'number', span: 2 },
     ],
   },
 
   regions: {
     label: 'Hudud',
     title: { add: 'Yangi hudud qo‘shish', edit: 'Hudud ma’lumotini tahrirlash' },
-    defaults: () => ({ out: 0, back: 0, risk: 30 }),
+    defaults: () => ({ out: 0, back: 0, employed: 0, risk: 30 }),
     fields: [
       { key: 'name', label: 'Hudud nomi', type: 'text', required: true, span: 2 },
       { key: 'lat', label: 'Kenglik (lat)', type: 'number', step: 0.01, required: true },
       { key: 'lng', label: 'Uzunlik (lng)', type: 'number', step: 0.01, required: true },
       { key: 'out', label: 'Chiqqanlar', type: 'number' },
       { key: 'back', label: 'Qaytganlar', type: 'number' },
+      { key: 'employed', label: 'Ish bilan ta’minlangan', type: 'number' },
       { key: 'risk', label: 'Xavf darajasi', type: 'number', min: 0, max: 100 },
     ],
   },
@@ -364,6 +369,30 @@ schemas.riskDistribution = {
   title: { add: 'Yangi daraja qo‘shish', edit: 'Darajani tahrirlash' },
   defaults: () => ({ value: 0, tone: 'saffron' }),
   fields: shareFields,
+}
+
+schemas.consulateCases = {
+  label: 'Konsullik ishi',
+  title: { add: 'Yangi ish qo‘shish', edit: 'Ishni tahrirlash' },
+  defaults: () => ({ stage: 'new', countryCode: db.countries[0]?.code }),
+  fields: [
+    { key: 'subject', label: 'Murojaat mavzusi', type: 'text', required: true, span: 2 },
+    { key: 'name', label: 'Murojaatchi F.I.Sh', type: 'text', span: 2 },
+    { key: 'countryCode', label: 'Davlat', type: 'select', required: true, options: countryOpts },
+    {
+      key: 'stage', label: 'Bosqichi', type: 'select',
+      options: [
+        { value: 'new', label: 'Yangi murojaatlar' },
+        { value: 'review', label: 'Ko‘rib chiqilmoqda' },
+        { value: 'waiting', label: 'Hujjat kutilmoqda' },
+        { value: 'closed', label: 'Yopilgan' },
+      ],
+    },
+    {
+      key: 'code', label: 'Ish raqami', type: 'text', span: 2,
+      hint: 'bo‘sh qolsa avtomatik beriladi',
+    },
+  ],
 }
 
 schemas.consulateServices = {

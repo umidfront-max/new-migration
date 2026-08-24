@@ -19,11 +19,12 @@ const active = ref(violations[0]?.key)
 const current = computed(() => violations.find((v) => v.key === active.value) || violations[0])
 const total = computed(() => violations.reduce((a, v) => a + v.value, 0))
 
+/* Qonunbuzilish holatlari bazadagi maydondan olinadi */
 const byCountry = computed(() =>
   [...countries]
-    .sort((a, b) => b.risk * b.total - a.risk * a.total)
+    .sort((a, b) => (b.violationCount || 0) - (a.violationCount || 0))
     .slice(0, 8)
-    .map((c) => ({ name: c.name, value: Math.round((c.total * c.risk) / 9000), risk: c.risk })),
+    .map((c) => ({ name: c.name, value: c.violationCount || 0, risk: c.risk })),
 )
 
 const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved } = useRecordModal({

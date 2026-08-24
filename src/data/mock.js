@@ -62,18 +62,18 @@ export const series = [
 /* angle — Toshkentdan yo‘nalish (gradus, 0 = shimol), dist — taxminiy km,
    lat/lng — asosiy qabul qiluvchi shahar koordinatasi (GIS xarita uchun) */
 export const countries = [
-  { code: 'RU', name: 'Rossiya', flag: '🇷🇺', angle: 330, dist: 2900, lat: 55.75, lng: 37.62, hub: 'Moskva', total: 1184300, out: 268400, back: 171200, risk: 62, remit: 4820, wanted: 1420, missing: 312, work: 214800, study: 8400, medical: 5100, residence: 21600, travel: 18500, jailed: 2840, remitCount: 1180 },
-  { code: 'KZ', name: 'Qozog‘iston', flag: '🇰🇿', angle: 6, dist: 1180, lat: 43.24, lng: 76.89, hub: 'Almati', total: 214600, out: 61200, back: 48900, risk: 38, remit: 610, wanted: 210, missing: 44, work: 44100, study: 4900, medical: 2600, residence: 5200, travel: 4400, jailed: 310, remitCount: 248 },
-  { code: 'TR', name: 'Turkiya', flag: '🇹🇷', angle: 262, dist: 3180, lat: 41.01, lng: 28.98, hub: 'Istanbul', total: 186400, out: 42800, back: 29400, risk: 54, remit: 720, wanted: 388, missing: 96, work: 28600, study: 6900, medical: 1900, residence: 2900, travel: 2500, jailed: 520, remitCount: 196 },
-  { code: 'KR', name: 'Janubiy Koreya', flag: '🇰🇷', angle: 78, dist: 5100, lat: 37.57, lng: 126.98, hub: 'Seul', total: 92300, out: 24100, back: 15600, risk: 24, remit: 980, wanted: 62, missing: 11, work: 19400, study: 2200, medical: 480, residence: 1100, travel: 920, jailed: 74, remitCount: 164 },
-  { code: 'AE', name: 'BAA', flag: '🇦🇪', angle: 218, dist: 2380, lat: 25.20, lng: 55.27, hub: 'Dubay', total: 74800, out: 21400, back: 14200, risk: 31, remit: 540, wanted: 88, missing: 19, work: 17200, study: 980, medical: 760, residence: 1400, travel: 1060, jailed: 118, remitCount: 132 },
-  { code: 'KG', name: 'Qirg‘iziston', flag: '🇰🇬', angle: 100, dist: 480, lat: 42.87, lng: 74.59, hub: 'Bishkek', total: 51200, out: 18600, back: 17100, risk: 27, remit: 130, wanted: 41, missing: 7, work: 13800, study: 1900, medical: 640, residence: 1300, travel: 960, jailed: 58, remitCount: 61 },
-  { code: 'DE', name: 'Germaniya', flag: '🇩🇪', angle: 288, dist: 4700, lat: 52.52, lng: 13.40, hub: 'Berlin', total: 38400, out: 9800, back: 4100, risk: 21, remit: 410, wanted: 34, missing: 6, work: 5600, study: 2400, medical: 380, residence: 980, travel: 440, jailed: 41, remitCount: 74 },
-  { code: 'PL', name: 'Polsha', flag: '🇵🇱', angle: 302, dist: 4120, lat: 52.23, lng: 21.01, hub: 'Varshava', total: 34900, out: 11200, back: 6800, risk: 29, remit: 280, wanted: 47, missing: 9, work: 8400, study: 1200, medical: 290, residence: 880, travel: 430, jailed: 63, remitCount: 58 },
-  { code: 'SA', name: 'Saudiya Arabistoni', flag: '🇸🇦', angle: 238, dist: 3300, lat: 24.71, lng: 46.68, hub: 'Ar-Riyod', total: 28600, out: 8400, back: 5900, risk: 44, remit: 240, wanted: 71, missing: 22, work: 6200, study: 640, medical: 310, residence: 740, travel: 510, jailed: 96, remitCount: 44 },
-  { code: 'JP', name: 'Yaponiya', flag: '🇯🇵', angle: 62, dist: 6120, lat: 35.68, lng: 139.69, hub: 'Tokio', total: 19700, out: 6100, back: 3200, risk: 18, remit: 310, wanted: 12, missing: 3, work: 4300, study: 1100, medical: 180, residence: 340, travel: 180, jailed: 14, remitCount: 38 },
-  { code: 'US', name: 'AQSH', flag: '🇺🇸', angle: 344, dist: 10400, lat: 40.71, lng: -74.01, hub: 'Nyu-York', total: 16200, out: 4200, back: 1400, risk: 22, remit: 390, wanted: 18, missing: 4, work: 2600, study: 760, medical: 140, residence: 560, travel: 140, jailed: 21, remitCount: 31 },
-  { code: 'GB', name: 'Buyuk Britaniya', flag: '🇬🇧', angle: 314, dist: 5300, lat: 51.51, lng: -0.13, hub: 'London', total: 11900, out: 3100, back: 1200, risk: 25, remit: 190, wanted: 15, missing: 2, work: 1900, study: 680, medical: 110, residence: 310, travel: 100, jailed: 18, remitCount: 24 },
+  { code: 'RU', name: 'Rossiya', flag: '🇷🇺', angle: 330, dist: 2900, lat: 55.75, lng: 37.62, hub: 'Moskva', total: 1184300, out: 268400, back: 171200, risk: 62, remit: 4820, wanted: 1420, missing: 312, work: 214800, study: 8400, medical: 5100, residence: 21600, travel: 18500, jailed: 2840, remitCount: 1180, consulateRequests: 10040, consulateHelped: 8170, violationCount: 8160 },
+  { code: 'KZ', name: 'Qozog‘iston', flag: '🇰🇿', angle: 6, dist: 1180, lat: 43.24, lng: 76.89, hub: 'Almati', total: 214600, out: 61200, back: 48900, risk: 38, remit: 610, wanted: 210, missing: 44, work: 44100, study: 4900, medical: 2600, residence: 5200, travel: 4400, jailed: 310, remitCount: 248, consulateRequests: 1820, consulateHelped: 1480, violationCount: 906 },
+  { code: 'TR', name: 'Turkiya', flag: '🇹🇷', angle: 262, dist: 3180, lat: 41.01, lng: 28.98, hub: 'Istanbul', total: 186400, out: 42800, back: 29400, risk: 54, remit: 720, wanted: 388, missing: 96, work: 28600, study: 6900, medical: 1900, residence: 2900, travel: 2500, jailed: 520, remitCount: 196, consulateRequests: 1580, consulateHelped: 1286, violationCount: 1118 },
+  { code: 'KR', name: 'Janubiy Koreya', flag: '🇰🇷', angle: 78, dist: 5100, lat: 37.57, lng: 126.98, hub: 'Seul', total: 92300, out: 24100, back: 15600, risk: 24, remit: 980, wanted: 62, missing: 11, work: 19400, study: 2200, medical: 480, residence: 1100, travel: 920, jailed: 74, remitCount: 164, consulateRequests: 782, consulateHelped: 637, violationCount: 246 },
+  { code: 'AE', name: 'BAA', flag: '🇦🇪', angle: 218, dist: 2380, lat: 25.20, lng: 55.27, hub: 'Dubay', total: 74800, out: 21400, back: 14200, risk: 31, remit: 540, wanted: 88, missing: 19, work: 17200, study: 980, medical: 760, residence: 1400, travel: 1060, jailed: 118, remitCount: 132, consulateRequests: 634, consulateHelped: 516, violationCount: 258 },
+  { code: 'KG', name: 'Qirg‘iziston', flag: '🇰🇬', angle: 100, dist: 480, lat: 42.87, lng: 74.59, hub: 'Bishkek', total: 51200, out: 18600, back: 17100, risk: 27, remit: 130, wanted: 41, missing: 7, work: 13800, study: 1900, medical: 640, residence: 1300, travel: 960, jailed: 58, remitCount: 61, consulateRequests: 434, consulateHelped: 353, violationCount: 154 },
+  { code: 'DE', name: 'Germaniya', flag: '🇩🇪', angle: 288, dist: 4700, lat: 52.52, lng: 13.40, hub: 'Berlin', total: 38400, out: 9800, back: 4100, risk: 21, remit: 410, wanted: 34, missing: 6, work: 5600, study: 2400, medical: 380, residence: 980, travel: 440, jailed: 41, remitCount: 74, consulateRequests: 325, consulateHelped: 265, violationCount: 90 },
+  { code: 'PL', name: 'Polsha', flag: '🇵🇱', angle: 302, dist: 4120, lat: 52.23, lng: 21.01, hub: 'Varshava', total: 34900, out: 11200, back: 6800, risk: 29, remit: 280, wanted: 47, missing: 9, work: 8400, study: 1200, medical: 290, residence: 880, travel: 430, jailed: 63, remitCount: 58, consulateRequests: 296, consulateHelped: 241, violationCount: 112 },
+  { code: 'SA', name: 'Saudiya Arabistoni', flag: '🇸🇦', angle: 238, dist: 3300, lat: 24.71, lng: 46.68, hub: 'Ar-Riyod', total: 28600, out: 8400, back: 5900, risk: 44, remit: 240, wanted: 71, missing: 22, work: 6200, study: 640, medical: 310, residence: 740, travel: 510, jailed: 96, remitCount: 44, consulateRequests: 242, consulateHelped: 197, violationCount: 140 },
+  { code: 'JP', name: 'Yaponiya', flag: '🇯🇵', angle: 62, dist: 6120, lat: 35.68, lng: 139.69, hub: 'Tokio', total: 19700, out: 6100, back: 3200, risk: 18, remit: 310, wanted: 12, missing: 3, work: 4300, study: 1100, medical: 180, residence: 340, travel: 180, jailed: 14, remitCount: 38, consulateRequests: 167, consulateHelped: 136, violationCount: 39 },
+  { code: 'US', name: 'AQSH', flag: '🇺🇸', angle: 344, dist: 10400, lat: 40.71, lng: -74.01, hub: 'Nyu-York', total: 16200, out: 4200, back: 1400, risk: 22, remit: 390, wanted: 18, missing: 4, work: 2600, study: 760, medical: 140, residence: 560, travel: 140, jailed: 21, remitCount: 31, consulateRequests: 137, consulateHelped: 112, violationCount: 40 },
+  { code: 'GB', name: 'Buyuk Britaniya', flag: '🇬🇧', angle: 314, dist: 5300, lat: 51.51, lng: -0.13, hub: 'London', total: 11900, out: 3100, back: 1200, risk: 25, remit: 190, wanted: 15, missing: 2, work: 1900, study: 680, medical: 110, residence: 310, travel: 100, jailed: 18, remitCount: 24, consulateRequests: 101, consulateHelped: 82, violationCount: 33 },
 ]
 
 /** Toshkent — barcha oqimlarning boshlanish nuqtasi */
@@ -81,20 +81,20 @@ export const origin = { name: 'Toshkent', lat: 41.31, lng: 69.24 }
 
 /* --------------------------------------------------------- Hududlar */
 export const regions = [
-  { name: 'Samarqand', lat: 39.65, lng: 66.96, out: 68400, back: 41200, risk: 47 },
-  { name: 'Farg‘ona', lat: 40.39, lng: 71.78, out: 64100, back: 39800, risk: 52 },
-  { name: 'Andijon', lat: 40.78, lng: 72.34, out: 58900, back: 36400, risk: 55 },
-  { name: 'Namangan', lat: 40.99, lng: 71.67, out: 54200, back: 33100, risk: 58 },
-  { name: 'Qashqadaryo', lat: 38.86, lng: 65.79, out: 47600, back: 28900, risk: 41 },
-  { name: 'Surxondaryo', lat: 37.22, lng: 67.28, out: 41300, back: 25700, risk: 49 },
-  { name: 'Buxoro', lat: 39.77, lng: 64.42, out: 32800, back: 21400, risk: 34 },
-  { name: 'Toshkent viloyati', lat: 40.90, lng: 69.90, out: 31200, back: 22800, risk: 30 },
-  { name: 'Jizzax', lat: 40.12, lng: 67.84, out: 24600, back: 15900, risk: 38 },
-  { name: 'Xorazm', lat: 41.55, lng: 60.63, out: 23100, back: 14700, risk: 36 },
-  { name: 'Navoiy', lat: 40.10, lng: 65.37, out: 18400, back: 12100, risk: 26 },
-  { name: 'Sirdaryo', lat: 40.49, lng: 68.78, out: 14900, back: 9800, risk: 29 },
-  { name: 'Qoraqalpog‘iston', lat: 42.46, lng: 59.61, out: 13800, back: 8400, risk: 44 },
-  { name: 'Toshkent shahri', lat: 41.31, lng: 69.24, out: 12900, back: 10600, risk: 22 },
+  { name: 'Samarqand', lat: 39.65, lng: 66.96, out: 68400, back: 41200, risk: 47 , employed: 19400},
+  { name: 'Farg‘ona', lat: 40.39, lng: 71.78, out: 64100, back: 39800, risk: 52 , employed: 18700},
+  { name: 'Andijon', lat: 40.78, lng: 72.34, out: 58900, back: 36400, risk: 55 , employed: 17100},
+  { name: 'Namangan', lat: 40.99, lng: 71.67, out: 54200, back: 33100, risk: 58 , employed: 15600},
+  { name: 'Qashqadaryo', lat: 38.86, lng: 65.79, out: 47600, back: 28900, risk: 41 , employed: 13600},
+  { name: 'Surxondaryo', lat: 37.22, lng: 67.28, out: 41300, back: 25700, risk: 49 , employed: 12100},
+  { name: 'Buxoro', lat: 39.77, lng: 64.42, out: 32800, back: 21400, risk: 34 , employed: 10100},
+  { name: 'Toshkent viloyati', lat: 40.90, lng: 69.90, out: 31200, back: 22800, risk: 30 , employed: 10700},
+  { name: 'Jizzax', lat: 40.12, lng: 67.84, out: 24600, back: 15900, risk: 38 , employed: 7500},
+  { name: 'Xorazm', lat: 41.55, lng: 60.63, out: 23100, back: 14700, risk: 36 , employed: 6900},
+  { name: 'Navoiy', lat: 40.10, lng: 65.37, out: 18400, back: 12100, risk: 26 , employed: 5700},
+  { name: 'Sirdaryo', lat: 40.49, lng: 68.78, out: 14900, back: 9800, risk: 29 , employed: 4600},
+  { name: 'Qoraqalpog‘iston', lat: 42.46, lng: 59.61, out: 13800, back: 8400, risk: 44 , employed: 3900},
+  { name: 'Toshkent shahri', lat: 41.31, lng: 69.24, out: 12900, back: 10600, risk: 22 , employed: 5000},
 ]
 
 /* --------------------------------------------------- Chiqish maqsadi */
@@ -406,6 +406,22 @@ export const reportArchive = [
   { name: 'Qonunbuzilishlar — II chorak', size: '1.8 MB', at: '14.07.2026', by: 'sh.rasulova' },
   { name: 'Pul jo‘natmalari — 2026-iyun', size: '860 KB', at: '03.07.2026', by: 'admin.root' },
 ]
+
+/* ------------------------------------------------- Konsullik ish oynasi
+   Kanban ustunlari shu yozuvlardan to'ldiriladi. */
+const caseSubjects = ['Pasport yo‘qolgan', 'Ish haqi to‘lanmagan', 'Tibbiy yordam', 'Qaytish yo‘llanmasi', 'Hujjat tasdiqlash', 'Notarial ariza']
+const caseStages = [['new', 24], ['review', 41], ['waiting', 12], ['closed', 186]]
+
+export const consulateCases = caseStages.flatMap(([stage, total], stageIndex) =>
+  /* Ro'yxat uzun bo'lmasligi uchun har bosqichdan namuna olinadi */
+  Array.from({ length: Math.min(total, stage === 'closed' ? 6 : 8) }, (_, i) => ({
+    code: `CN-${4820 + stageIndex * 60 + i}`,
+    name: nameOf(),
+    countryCode: pick(countries).code,
+    subject: caseSubjects[(stageIndex + i) % caseSubjects.length],
+    stage,
+  })),
+)
 
 /* ---------------------------------------------------- Konsullik xizmatlari */
 export const consulateServices = [

@@ -5,9 +5,10 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 import AreaTrend from '@/components/charts/AreaTrend.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, serie } from '@/stores/db'
+import { db, serie, summary } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { months } from '@/data/labels'
+import { fmt } from '@/composables/useCountUp'
 
 const aiInsights = db.aiInsights
 const composition = db.composition
@@ -66,7 +67,11 @@ const ask = () => {
       <Transition name="fadein">
         <div v-if="thinking" class="thinking">
           <span class="bar" />
-          <p class="v-note">Model 2.1 mln yozuv, 12 oylik dinamika va 17 ta tashqi manbani solishtirmoqda…</p>
+          <p class="v-note">
+            Model {{ fmt(summary.registry.count || 0) }} ta reyestr yozuvi,
+            {{ summary.countries.count || 0 }} ta yo‘nalish va
+            {{ db.integrations.length }} ta tashqi manbani solishtirmoqda…
+          </p>
         </div>
       </Transition>
     </PanelCard>
@@ -102,7 +107,7 @@ const ask = () => {
 
     <div class="v-2-1">
       <PanelCard eyebrow="Korrelyatsiya" title="Chiqish oqimi va pul jo‘natmalari"
-                 hint="Model bu ikki qatorning bog‘liqligini 0.83 koeffitsient bilan baholadi"
+                 :hint="`Chiqqanlar ${fmt(summary.countries.departed || 0)} · jo‘natmalar ${fmt(summary.countries.remittance || 0)} mln $`"
                  class="enter" :style="{ '--i': 6 }">
         <AreaTrend :series="forecast" :labels="months" :height="270" />
       </PanelCard>

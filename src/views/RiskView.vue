@@ -7,7 +7,7 @@ import RiskBadge from '@/components/ui/RiskBadge.vue'
 import BarRank from '@/components/charts/BarRank.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, setting } from '@/stores/db'
+import { db, setting, summary } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -50,7 +50,8 @@ const byCountry = computed(() =>
             <AppIcon name="edit" :size="13" /> Indeks
           </button>
         </template>
-        <RiskGauge :score="overallRisk" caption="2 148 630 ta yozuv bo‘yicha o‘rtacha" />
+        <RiskGauge :score="overallRisk"
+                   :caption="`${fmt(summary.registry.count || 0)} ta reyestr yozuvi bo‘yicha`" />
       </PanelCard>
 
       <PanelCard eyebrow="Taqsimot" title="Xavf darajalari" class="enter" :style="{ '--i': 1 }">

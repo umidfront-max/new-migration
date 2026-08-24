@@ -32,6 +32,7 @@ export const ENDPOINTS = {
   sosEvents: { path: '/sos-events/' },
   sosChannels: { path: '/sos-channels/' },
   consulateServices: { path: '/consulate-services/' },
+  consulateCases: { path: '/consulate-cases/' },
   returnPrograms: { path: '/return-programs/' },
 
   /* analitika */
