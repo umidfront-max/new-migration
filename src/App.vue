@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppShell from '@/components/layout/AppShell.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { useAuth, hasStoredToken } from '@/stores/auth'
-import { loadAll, refreshAll, status } from '@/stores/db'
+import { isPageLoaded, loadCore, loadPage, refreshPage, status } from '@/stores/db'
 import { API_URL } from '@/services/api'
 import '@/stores/theme'
 
@@ -13,20 +13,37 @@ const router = useRouter()
 const { isAuthed, restore } = useAuth()
 
 const booted = ref(false)
+/** Joriy sahifa ma'lumoti tayyor bo'lganda `true` */
+const pageReady = ref(false)
 
 /** Ma'lumot yuklanmaguncha qobiq ko'rsatilmaydi */
 const needsData = computed(() => !route.meta.blank && isAuthed.value)
 const showSplash = computed(() => !booted.value || (needsData.value && !status.ready && !status.error))
 const showError = computed(() => needsData.value && !!status.error)
 
-/** Sessiyani tiklab, ma'lumotni yuklaydi */
+/**
+ * Ochilgan sahifaga kerakli ma'lumotni yuklaydi.
+ * Keshda bo'lsa so'rov ketmaydi va o'tish bir zumda bo'ladi.
+ */
+const openPage = async (path) => {
+  if (!isAuthed.value || route.meta.blank) return
+  /* Keshdagi sahifa darhol ko'rsatiladi — yuklash indikatori chaqnamaydi */
+  pageReady.value = isPageLoaded(path)
+  try {
+    await loadPage(path)
+    pageReady.value = true
+  } catch { /* xato `status.error` da ko'rsatiladi */ }
+}
+
+/** Sessiyani tiklab, qobiq uchun umumiy ma'lumotni yuklaydi */
 const boot = async () => {
   if (hasStoredToken()) {
     const restored = await restore()
     if (!restored) await router.replace('/login')
   }
   if (isAuthed.value) {
-    await loadAll().catch(() => { /* xato `status.error` da ko'rsatiladi */ })
+    await loadCore().catch(() => { /* xato `status.error` da ko'rsatiladi */ })
+    if (status.ready) await openPage(route.path)
   }
   booted.value = true
 }
@@ -35,12 +52,23 @@ onMounted(boot)
 
 /* Kirgandan keyin ma'lumot yuklanadi */
 watch(isAuthed, async (value) => {
-  if (value && !status.ready) {
-    await loadAll().catch(() => {})
+  if (!value) {
+    pageReady.value = false
+    return
   }
+  if (!status.ready) await loadCore().catch(() => {})
+  if (status.ready) await openPage(route.path)
 })
 
-const retry = () => refreshAll().catch(() => {})
+/* Har bir sahifa o'z endpointlarini o'zi so'raydi */
+watch(() => route.path, (path) => {
+  if (booted.value) openPage(path)
+})
+
+const retry = async () => {
+  if (!status.ready) await loadCore().catch(() => {})
+  await refreshPage(route.path).then(() => (pageReady.value = true)).catch(() => {})
+}
 </script>
 
 <template>
@@ -82,7 +110,13 @@ const retry = () => refreshAll().catch(() => {})
     </RouterView>
 
     <AppShell v-else-if="status.ready">
-      <RouterView v-slot="{ Component, route: r }">
+      <!-- Sahifa ma'lumoti kelmaguncha — o'rniga yengil ko'rsatkich -->
+      <div v-if="!pageReady" class="pageWait">
+        <span class="dots"><i /><i /><i /></span>
+        <p class="eyebrow">Sahifa ma’lumoti yuklanmoqda</p>
+      </div>
+
+      <RouterView v-else v-slot="{ Component, route: r }">
         <Transition name="view" mode="out-in">
           <component :is="Component" :key="r.path" />
         </Transition>
@@ -92,6 +126,30 @@ const retry = () => refreshAll().catch(() => {})
 </template>
 
 <style scoped>
+/* Sahifa ma'lumoti yuklanayotgandagi ko'rsatkich — qobiq joyida qoladi */
+.pageWait {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  min-height: 52vh;
+}
+.dots { display: flex; gap: 6px; }
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--turk);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+.dots i:nth-child(2) { animation-delay: 0.16s; background: var(--saffron); }
+.dots i:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-4px); }
+}
+
 .boot {
   position: fixed;
   inset: 0;

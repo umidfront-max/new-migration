@@ -31,6 +31,38 @@ const revealed = ref({})
 
 const optionsOf = (f) => (typeof f.options === 'function' ? f.options() : f.options || [])
 
+/* --------------------------------------------------------------- maskalar
+   Sxemadagi `mask` maydoni kiritilayotgan matnni darhol formatlaydi.
+   Har bir mask (raw) => tozalangan qiymat qaytaradi. */
+const maskFns = {
+  /* Faqat raqam, uzunligi `len` bilan cheklangan (PINFL — 14 ta) */
+  digits: (raw, f) => raw.replace(/\D/g, '').slice(0, f.len ?? 32),
+
+  /* +998 90 123-45-67 */
+  phone: (raw) => {
+    let d = raw.replace(/\D/g, '')
+    if (d.startsWith('998')) d = d.slice(3)
+    d = d.slice(0, 9)
+    if (!d) return ''
+    let out = '+998 ' + d.slice(0, 2)
+    if (d.length > 2) out += ' ' + d.slice(2, 5)
+    if (d.length > 5) out += '-' + d.slice(5, 7)
+    if (d.length > 7) out += '-' + d.slice(7, 9)
+    return out
+  },
+}
+
+/** Maskali maydonning `maxlength` qiymati */
+const maskMax = (f) => (f.mask === 'phone' ? 17 : f.len)
+
+/** Kiritish paytida formatlash — DOM ham majburan tenglashtiriladi,
+ *  aks holda qiymat o'zgarmasa Vue inputni qayta chizmaydi. */
+const onMasked = (f, ev) => {
+  const out = maskFns[f.mask](ev.target.value, f)
+  form.value[f.key] = out
+  if (ev.target.value !== out) ev.target.value = out
+}
+
 /** `multi` maydonda variantni qo'shish yoki olib tashlash */
 const toggleMulti = (key, value) => {
   const list = form.value[key] || []
@@ -227,6 +259,16 @@ const destroy = async () => {
                   <input v-model="form[f.key][k]" type="number" />
                 </label>
               </span>
+
+              <input
+                v-else-if="f.mask"
+                :value="form[f.key]"
+                type="text"
+                inputmode="numeric"
+                :maxlength="maskMax(f)"
+                :placeholder="f.placeholder"
+                @input="onMasked(f, $event)"
+              />
 
               <input
                 v-else

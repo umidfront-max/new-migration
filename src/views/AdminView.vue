@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, patchRecord, refreshAll, status } from '@/stores/db'
+import { db, patchRecord, refreshLoaded, status } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
@@ -25,9 +25,9 @@ const edit = (c, row) => {
 }
 const openAdd = () => add('roles')
 
-/* Serverdan qayta yuklash */
+/* Serverdan qayta yuklash — keshda turgan to'plamlar qayta o'qiladi */
 const doRefresh = async () => {
-  await refreshAll().catch(() => {})
+  await refreshLoaded().catch(() => {})
   say(status.error ? `Yangilab bo‘lmadi: ${status.error}` : 'Ma’lumot serverdan yangilandi')
 }
 

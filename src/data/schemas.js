@@ -64,8 +64,15 @@ export const schemas = {
     }),
     fields: [
       { key: 'name', label: 'F.I.Sh', type: 'text', required: true, span: 2, placeholder: 'Karimov Jasur' },
-      { key: 'pinfl', label: 'PINFL', type: 'text', required: true, pattern: '^\\d{14}$', hint: '14 ta raqam' },
-      { key: 'phone', label: 'Telefon', type: 'text', placeholder: '+998 90 123-45-67' },
+      {
+        key: 'pinfl', label: 'PINFL', type: 'text', required: true,
+        mask: 'digits', len: 14, pattern: '^\\d{14}$', hint: '14 ta raqam',
+      },
+      {
+        key: 'phone', label: 'Telefon', type: 'text', mask: 'phone',
+        placeholder: '+998 90 123-45-67', pattern: '^\\+998 \\d{2} \\d{3}-\\d{2}-\\d{2}$',
+        hint: '+998 90 123-45-67',
+      },
       { key: 'nationality', label: 'Millati', type: 'select', options: opt(nationalities) },
       { key: 'gender', label: 'Jinsi', type: 'select', options: opt(['Erkak', 'Ayol', 'Voyaga yetmagan']) },
       { key: 'speciality', label: 'Mutaxassisligi', type: 'select', options: opt(specialities) },
