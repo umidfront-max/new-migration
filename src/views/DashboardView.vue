@@ -162,7 +162,7 @@ const womenShare = computed(() => {
             Modul <AppIcon name="chevron" :size="14" />
           </button>
         </template>
-        <SosFeed :limit="6" />
+        <SosFeed :limit="6" @open="router.push('/sos')" />
       </PanelCard>
     </div>
 

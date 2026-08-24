@@ -1,15 +1,20 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RiskBadge from '@/components/ui/RiskBadge.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db, exportCollection } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
+import { useApp } from '@/stores/app'
 import { fmt } from '@/composables/useCountUp'
 
 const migrants = db.migrants
 const countries = db.countries
+
+const router = useRouter()
+const { selectCountry } = useApp()
 
 const q = ref('')
 const fCountry = ref('all')
@@ -71,6 +76,12 @@ const saved = (e) => {
 const removed = (e) => {
   selected.value = null
   onRemoved(e)
+}
+
+/** Xaritada ko'rsatish — davlatni tanlab GIS sahifasiga o'tadi */
+const showOnMap = (migrant) => {
+  selectCountry(migrant.countryCode)
+  router.push('/countries')
 }
 </script>
 
@@ -212,8 +223,12 @@ const removed = (e) => {
           <button class="btn primary" @click="openEdit(selected)">
             <AppIcon name="edit" :size="14" /> Tahrirlash
           </button>
-          <button class="btn"><AppIcon name="phone" :size="14" /> Bog‘lanish</button>
-          <button class="btn"><AppIcon name="pin" :size="14" /> Xaritada</button>
+          <a v-if="selected.phone" class="btn" :href="`tel:${selected.phone.replace(/[^+\d]/g, '')}`">
+            <AppIcon name="phone" :size="14" /> Bog‘lanish
+          </a>
+          <button class="btn" @click="showOnMap(selected)">
+            <AppIcon name="pin" :size="14" /> Xaritada
+          </button>
         </div>
       </aside>
     </Transition>
@@ -438,7 +453,7 @@ dd { margin: 0; font-size: 12.5px; text-align: right; }
 .rbTxt { margin: 0; font-size: 12px; line-height: 1.6; color: var(--mist); }
 
 .acts { display: flex; gap: 10px; margin-top: 20px; }
-.acts .btn { flex: 1; justify-content: center; }
+.acts .btn { flex: 1; justify-content: center; text-decoration: none; }
 
 .drawer-enter-active { transition: transform 0.45s var(--ease-out), opacity 0.45s ease; }
 .drawer-leave-active { transition: transform 0.3s ease, opacity 0.3s ease; }

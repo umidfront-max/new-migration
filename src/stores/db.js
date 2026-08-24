@@ -204,9 +204,8 @@ export async function generateReport(template) {
   return result
 }
 
-/** CSV eksport — brauzerda yuklab olishni boshlaydi */
-export async function exportCollection(name, params = {}) {
-  const { blob, filename } = await api.download(`${ENDPOINTS[name].path}export/`, params)
+/** Faylni brauzerda yuklab olishni boshlaydi */
+function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -216,6 +215,18 @@ export async function exportCollection(name, params = {}) {
   link.remove()
   URL.revokeObjectURL(url)
   return filename
+}
+
+/** CSV eksport — joriy filtrlar bilan */
+export async function exportCollection(name, params = {}) {
+  const { blob, filename } = await api.download(`${ENDPOINTS[name].path}export/`, params)
+  return saveBlob(blob, filename)
+}
+
+/** Arxivdagi hisobot faylini yuklab oladi */
+export async function downloadReport(entry) {
+  const { blob, filename } = await api.download(`${detailPath('reportArchive', entry)}download/`)
+  return saveBlob(blob, filename)
 }
 
 /* ----------------------------------------------------- qulay qisqartmalar */

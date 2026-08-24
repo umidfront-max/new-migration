@@ -1,62 +1,75 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { db } from '@/stores/db'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { db, loadCollection } from '@/stores/db'
 import AppIcon from '@/components/ui/AppIcon.vue'
-
-const sosEvents = db.sosEvents
 
 const props = defineProps({
   limit: { type: Number, default: 6 },
+  /** Jonli rejim — serverdan davriy so'rov yuboriladi */
   live: { type: Boolean, default: true },
+  /** So'rov oralig'i, sekund */
+  interval: { type: Number, default: 20 },
   /** true bo'lsa — har bir murojaatda tahrirlash tugmasi chiqadi */
   editable: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['edit', 'resolve'])
+const emit = defineEmits(['edit', 'resolve', 'open'])
 
-const items = ref(sosEvents.slice(0, props.limit).map((e) => ({ ...e })))
-let timer = null
-let cursor = props.limit
+/* Ro'yxat to'g'ridan-to'g'ri bazadan olinadi — nusxa saqlanmaydi */
+const items = computed(() => db.sosEvents.slice(0, props.limit))
 
 const sevTone = { critical: 'violet', high: 'coral', mid: 'saffron', low: 'turk' }
 const sevName = { critical: 'Kritik', high: 'Shoshilinch', mid: 'O‘rta', low: 'Past' }
 
-const push = () => {
-  if (!sosEvents.length) return
-  const next = sosEvents[cursor % sosEvents.length]
-  cursor++
-  items.value = [{ ...next, id: `${next.id}-${cursor}`, minutesAgo: 0 }, ...items.value].slice(0, props.limit)
-}
+const polling = ref(false)
+const lastSync = ref(null)
+let timer = null
 
-/* Bazaga qo'lda qo'shilgan murojaat darhol oqim boshiga chiqadi */
-watch(
-  () => sosEvents.length,
-  (n, o) => {
-    if (n > o) items.value = [{ ...sosEvents[0], minutesAgo: 0 }, ...items.value].slice(0, props.limit)
-    else items.value = sosEvents.slice(0, props.limit).map((e) => ({ ...e }))
-  },
-)
+/**
+ * Serverdan yangi murojaatlarni oladi.
+ * Sahifa ko'rinmayotganda so'rov yuborilmaydi — behuda trafik bo'lmasin.
+ */
+const sync = async () => {
+  if (document.hidden || polling.value) return
+  polling.value = true
+  try {
+    await loadCollection('sosEvents')
+    lastSync.value = new Date()
+  } catch { /* ulanish uzilsa keyingi urinishda tiklanadi */ } finally {
+    polling.value = false
+  }
+}
 
 onMounted(() => {
   if (!props.live) return
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  timer = setInterval(push, 7000)
+  timer = setInterval(sync, props.interval * 1000)
+  document.addEventListener('visibilitychange', sync)
 })
-onUnmounted(() => clearInterval(timer))
+
+onUnmounted(() => {
+  clearInterval(timer)
+  document.removeEventListener('visibilitychange', sync)
+})
 
 const ago = (m) => (m === 0 ? 'hozir' : m < 60 ? `${m} daq oldin` : `${Math.floor(m / 60)} soat oldin`)
-const openCount = computed(() => items.value.filter((i) => i.severity !== 'low').length)
+const openCount = computed(() => items.value.filter((i) => !i.resolved).length)
 </script>
 
 <template>
   <div class="feed">
     <div class="stat">
-      <span class="live"><i />JONLI</span>
-      <span class="muted">Ochiq murojaatlar: <b class="num">{{ openCount }}</b></span>
+      <span class="live" :class="{ busy: polling }">
+        <i />{{ polling ? 'YANGILANMOQDA' : 'JONLI' }}
+      </span>
+      <span class="muted">
+        Ochiq murojaatlar: <b class="num">{{ openCount }}</b>
+        <span v-if="lastSync" class="dotsep">·</span>
+        <span v-if="lastSync" class="num sync">{{ lastSync.toLocaleTimeString('ru-RU') }}</span>
+      </span>
     </div>
 
     <TransitionGroup name="list" tag="ul" class="list">
-      <li v-for="e in items" :key="e.id" :class="`s-${sevTone[e.severity]}`">
+      <li v-for="e in items" :key="e._id" :class="`s-${sevTone[e.severity]}`">
         <span class="ring"><i /></span>
         <div class="mid">
           <p class="ttl">{{ e.type }}</p>
@@ -82,7 +95,7 @@ const openCount = computed(() => items.value.filter((i) => i.severity !== 'low')
       </li>
     </TransitionGroup>
 
-    <button class="all">
+    <button class="all" @click="emit('open')">
       Barcha murojaatlar
       <AppIcon name="chevron" :size="14" />
     </button>
@@ -109,6 +122,9 @@ const openCount = computed(() => items.value.filter((i) => i.severity !== 'low')
   letter-spacing: 0.2em;
   color: var(--coral);
 }
+.live.busy { color: var(--turk); }
+.live.busy i { background: var(--turk); }
+.sync { font-size: 10.5px; color: var(--mist-dim); }
 .live i {
   width: 7px;
   height: 7px;

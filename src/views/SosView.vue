@@ -78,7 +78,8 @@ const sosTrend = computed(() => [serie('sos')].filter(Boolean))
         </Transition>
 
         <SosFeed :limit="10" editable
-                 @edit="edit('sosEvents', $event)" @resolve="resolve" />
+                 @edit="edit('sosEvents', $event)" @resolve="resolve"
+                 @open="exportLog" />
       </PanelCard>
 
       <div class="side">

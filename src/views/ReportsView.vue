@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, generateReport } from '@/stores/db'
+import { db, downloadReport, generateReport } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 
 const templates = db.reportTemplates
@@ -27,9 +27,18 @@ const edit = (c, row) => {
 /** Shablon bo'yicha hisobot shakllantiradi — arxivga yozuv qo'shiladi */
 const build = async (template) => {
   building.value = template._id
-  await run(() => generateReport(template), `${template.name} — arxivga qo‘shildi`)
+  const result = await run(
+    () => generateReport(template),
+    `${template.name} — shakllantirildi`,
+  )
   building.value = null
+  /* Shakllantirilgan hisobot darhol yuklab olinadi */
+  if (result?.archive) await run(() => downloadReport(result.archive))
 }
+
+/** Arxivdagi yozuvni CSV ko'rinishida yuklab olish */
+const download = (entry) =>
+  run(() => downloadReport(entry), `${entry.name} yuklab olindi`)
 
 </script>
 
@@ -86,9 +95,14 @@ const build = async (template) => {
               <td class="num muted">{{ r.at }}</td>
               <td class="num tk">{{ r.by }}</td>
               <td class="ta">
-                <button class="dl" aria-label="Tahrirlash" @click="edit('reportArchive', r)">
-                  <AppIcon name="edit" :size="14" />
-                </button>
+                <span class="aActs">
+                  <button class="dl" title="Yuklab olish" @click="download(r)">
+                    <AppIcon name="export" :size="14" />
+                  </button>
+                  <button class="dl" aria-label="Tahrirlash" @click="edit('reportArchive', r)">
+                    <AppIcon name="edit" :size="14" />
+                  </button>
+                </span>
               </td>
             </tr>
           </tbody>
@@ -104,6 +118,8 @@ const build = async (template) => {
 </template>
 
 <style scoped>
+.aActs { display: inline-flex; gap: 4px; justify-content: flex-end; }
+
 .tp .pen {
   position: absolute;
   right: 12px;

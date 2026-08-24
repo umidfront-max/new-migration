@@ -73,6 +73,25 @@ function fieldErrors(payload) {
 const isAbort = (error) => error?.name === 'AbortError'
 
 /**
+ * `Content-Disposition` dan fayl nomini oladi.
+ * RFC 5987 dagi `filename*=UTF-8''…` afzal ko'riladi — unda to'liq nom bo'ladi.
+ */
+function filenameFrom(headers) {
+  const disposition = headers.get('Content-Disposition') || ''
+
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1].trim())
+    } catch { /* buzuq kodlash — oddiy nomga o'tamiz */ }
+  }
+
+  const plain = disposition.match(/filename="([^"]+)"/i) || disposition.match(/filename=([^;]+)/i)
+  const name = plain?.[1]?.trim()
+  return name && name.toLowerCase().endsWith('.csv') ? name : 'export.csv'
+}
+
+/**
  * Asosiy so'rov funksiyasi.
  * @param {string} path — `/migrants/` ko'rinishida
  */
@@ -157,8 +176,6 @@ export const api = {
   async download(path, params) {
     const response = await request(path, { params, raw: true })
     const blob = await response.blob()
-    const disposition = response.headers.get('Content-Disposition') || ''
-    const match = disposition.match(/filename="?([^"]+)"?/)
-    return { blob, filename: match ? match[1] : 'export.csv' }
+    return { blob, filename: filenameFrom(response.headers) }
   },
 }

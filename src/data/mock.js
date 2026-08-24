@@ -393,18 +393,18 @@ export const auditStats = [
 
 /* ------------------------------------------------- Hisobot shablonlari */
 export const reportTemplates = [
-  { name: 'Umumiy migratsiya holati', desc: 'Barcha KPI, davlatlar va hududlar kesimi', period: 'Oylik', fmt: 'XLSX, PDF', tone: 'lapis' },
-  { name: 'Qonunbuzilishlar hisoboti', desc: 'Turlar va davlatlar bo‘yicha, IIV formatida', period: 'Choraklik', fmt: 'XLSX, DOCX', tone: 'coral' },
-  { name: 'Konsullik faoliyati', desc: 'Murojaatlar, yordam va sertifikatlar', period: 'Oylik', fmt: 'PDF', tone: 'saffron' },
-  { name: 'Pul jo‘natmalari tahlili', desc: 'Markaziy bank ma’lumotlari bilan solishtirma', period: 'Oylik', fmt: 'XLSX, CSV', tone: 'turk' },
-  { name: 'Qaytish va reintegratsiya', desc: 'Bandlik va o‘qitish ko‘rsatkichlari', period: 'Choraklik', fmt: 'XLSX, PDF', tone: 'violet' },
-  { name: 'AI xavf tahlili', desc: 'Model natijalari va ustuvor nazorat ro‘yxati', period: 'Haftalik', fmt: 'PDF', tone: 'saffron' },
+  { name: 'Umumiy migratsiya holati', desc: 'Barcha KPI, davlatlar va hududlar kesimi', period: 'Oylik', fmt: 'XLSX, PDF', dataset: 'migrants', tone: 'lapis' },
+  { name: 'Qonunbuzilishlar hisoboti', desc: 'Turlar va davlatlar bo‘yicha, IIV formatida', period: 'Choraklik', fmt: 'XLSX, DOCX', dataset: 'sos-events', tone: 'coral' },
+  { name: 'Konsullik faoliyati', desc: 'Murojaatlar, yordam va sertifikatlar', period: 'Oylik', fmt: 'PDF', dataset: 'sos-events', tone: 'saffron' },
+  { name: 'Pul jo‘natmalari tahlili', desc: 'Markaziy bank ma’lumotlari bilan solishtirma', period: 'Oylik', fmt: 'XLSX, CSV', dataset: 'employers', tone: 'turk' },
+  { name: 'Qaytish va reintegratsiya', desc: 'Bandlik va o‘qitish ko‘rsatkichlari', period: 'Choraklik', fmt: 'XLSX, PDF', dataset: 'migrants', tone: 'violet' },
+  { name: 'AI xavf tahlili', desc: 'Model natijalari va ustuvor nazorat ro‘yxati', period: 'Haftalik', fmt: 'PDF', dataset: 'migrants', tone: 'saffron' },
 ]
 
 export const reportArchive = [
-  { name: 'Umumiy migratsiya holati — 2026-iyul', size: '4.2 MB', at: '02.08.2026', by: 'a.karimov' },
-  { name: 'Qonunbuzilishlar — II chorak', size: '1.8 MB', at: '14.07.2026', by: 'sh.rasulova' },
-  { name: 'Pul jo‘natmalari — 2026-iyun', size: '860 KB', at: '03.07.2026', by: 'admin.root' },
+  { name: 'Umumiy migratsiya holati — 2026-iyul', size: '4.2 MB', at: '02.08.2026', dataset: 'migrants', by: 'a.karimov' },
+  { name: 'Qonunbuzilishlar — II chorak', size: '1.8 MB', at: '14.07.2026', dataset: 'sos-events', by: 'sh.rasulova' },
+  { name: 'Pul jo‘natmalari — 2026-iyun', size: '860 KB', at: '03.07.2026', dataset: 'employers', by: 'admin.root' },
 ]
 
 /* ------------------------------------------------- Konsullik ish oynasi
