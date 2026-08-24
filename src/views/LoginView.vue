@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import { useAuth, demoAccounts, DEMO_PASSWORD } from '@/stores/auth'
@@ -10,8 +10,10 @@ const route = useRoute()
 const { signIn } = useAuth()
 const { theme, toggleTheme } = useTheme()
 
-const login = ref('admin.root')
+const login = ref('')
 const password = ref('')
+/* Foydalanuvchi yozishni boshlaganini belgilaydi — tozalash to'xtaydi */
+const touched = ref(false)
 const remember = ref(true)
 const show = ref(false)
 const busy = ref(false)
@@ -40,11 +42,29 @@ const submit = async () => {
 }
 
 const useDemo = (account) => {
+  touched.value = true
   login.value = account.login
   password.value = DEMO_PASSWORD
   error.value = ''
   demoOpen.value = false
 }
+
+/**
+ * Forma har doim bo'sh ochiladi.
+ * `autocomplete` sarlavhalarini brauzerlar ko'pincha e'tiborsiz qoldiradi va
+ * saqlangan hisobni komponent chizilgandan keyin qo'yadi — shuning uchun
+ * bir necha qadamda tozalanadi. Foydalanuvchi bir harf yozsa — to'xtaydi.
+ */
+onMounted(() => {
+  const clear = () => {
+    if (touched.value) return
+    login.value = ''
+    password.value = ''
+  }
+  clear()
+  requestAnimationFrame(clear)
+  setTimeout(clear, 150)
+})
 </script>
 
 <template>
@@ -109,7 +129,7 @@ const useDemo = (account) => {
 
     <!-- ========================================================= o'ng panel -->
     <section class="pane">
-      <form class="card" @submit.prevent="submit">
+      <form class="card" autocomplete="off" @submit.prevent="submit">
         <span class="cardTop" aria-hidden="true" />
 
         <span class="lock"><AppIcon name="shield" :size="19" /></span>
@@ -120,7 +140,11 @@ const useDemo = (account) => {
           <span class="lb">Login</span>
           <span class="wrap">
             <AppIcon name="user" :size="16" />
-            <input v-model="login" autocomplete="username" placeholder="admin.root" />
+            <input
+              v-model="login" name="tizim-login" autocomplete="off"
+              autocapitalize="none" autocorrect="off" spellcheck="false"
+              placeholder="admin.root" @input="touched = true"
+            />
           </span>
         </label>
 
@@ -128,8 +152,11 @@ const useDemo = (account) => {
           <span class="lb">Parol</span>
           <span class="wrap">
             <AppIcon name="shield" :size="16" />
-            <input v-model="password" :type="show ? 'text' : 'password'"
-                   autocomplete="current-password" placeholder="••••••••" />
+            <input
+              v-model="password" :type="show ? 'text' : 'password'"
+              name="tizim-parol" autocomplete="new-password"
+              placeholder="••••••••" @input="touched = true"
+            />
             <button type="button" class="eye" :aria-label="show ? 'Yashirish' : 'Ko‘rsatish'"
                     @click="show = !show">
               <AppIcon :name="show ? 'eyeOff' : 'eye'" :size="16" />

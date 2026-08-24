@@ -96,7 +96,11 @@ function filenameFrom(headers) {
  * @param {string} path — `/migrants/` ko'rinishida
  */
 export async function request(path, { method = 'GET', body, params, signal, raw = false } = {}) {
-  const url = new URL(API_URL + path)
+  /* API_URL nisbiy bo'lishi mumkin (`/api`) — prodda frontend va backend
+     bir domenda turadi, shunda build manzilga bog'lanib qolmaydi.
+     Mutlaq manzil berilsa ikkinchi argument e'tiborga olinmaydi. */
+  const origin = typeof window === 'undefined' ? undefined : window.location.origin
+  const url = new URL(API_URL + path, origin)
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value)
