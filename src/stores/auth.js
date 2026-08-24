@@ -14,9 +14,18 @@ const state = reactive({
   checking: false,
 })
 
-/** Login sahifasidagi maslahat — demo hisoblar */
+/**
+ * Tizim bo'limini (admin paneli, foydalanuvchilar, audit, hisobotlar)
+ * ochish huquqi shu roldagilarda. Backend `is_superuser` ni qaytarmaydi,
+ * shuning uchun rol nomi bo'yicha aniqlanadi.
+ */
+export const SUPER_ADMIN_ROLE = 'Super administrator'
+
+/* Login sahifasidagi maslahat — demo hisoblar.
+   Super administrator bu ro'yxatda yo'q: uning huquqi kengroq va
+   paroli ham boshqacha, shuning uchun ochiq ko'rsatilmaydi. */
 export const demoAccounts = [
-  { login: 'admin.root', role: 'Super administrator' },
+  { login: 'admin.root', role: 'Respublika administratori' },
   { login: 'sh.rasulova', role: 'Respublika administratori' },
   { login: 'konsul.msk', role: 'Konsullik xodimi' },
   { login: 'operator.fargona', role: 'Viloyat operatori' },
@@ -49,6 +58,8 @@ export function useAuth() {
     user: computed(() => state.user),
     isAuthed: computed(() => !!state.user),
     checking: computed(() => state.checking),
+    /** Yon paneldagi "Tizim" bo'limi shunga qarab ko'rsatiladi */
+    isSuper: computed(() => state.user?.role === SUPER_ADMIN_ROLE),
 
     /**
      * Login va parol bo'yicha token oladi.
@@ -86,28 +97,50 @@ export function useAuth() {
       clearAll()
     },
 
-    /**
-     * Saqlangan token bo'yicha sessiyani tiklaydi.
-     * @returns {Promise<boolean>} sessiya tiklandimi
-     */
-    async restore() {
-      if (!getToken()) return false
-      state.checking = true
-      try {
-        state.user = await api.get('/auth/me/')
-        syncActor()
-        return true
-      } catch {
-        setToken(null)
-        state.user = null
-        syncActor()
-        return false
-      } finally {
-        state.checking = false
-      }
-    },
+    /** Saqlangan token bo'yicha sessiyani tiklaydi */
+    restore: restoreSession,
   }
+}
+
+/* Bir vaqtda bir nechta chaqiruv bo'lsa — bitta so'rov ketadi.
+   App.vue ham, router guard ham shu funksiyani chaqiradi. */
+let restoring = null
+
+/**
+ * Saqlangan token bo'yicha sessiyani tiklaydi.
+ * @returns {Promise<boolean>} sessiya tiklandimi
+ */
+export function restoreSession() {
+  if (!getToken()) return Promise.resolve(false)
+  if (restoring) return restoring
+
+  state.checking = true
+  restoring = api
+    .get('/auth/me/')
+    .then((user) => {
+      state.user = user
+      syncActor()
+      return true
+    })
+    .catch(() => {
+      setToken(null)
+      state.user = null
+      syncActor()
+      return false
+    })
+    .finally(() => {
+      state.checking = false
+      restoring = null
+    })
+
+  return restoring
 }
 
 /** Router guard uchun — reaktivlikdan tashqarida o'qish */
 export const isAuthenticated = () => !!state.user || hasStoredToken()
+
+/** Sessiya haqiqatan yuklanganmi (token bor-yo'qligi emas) */
+export const isSessionLoaded = () => !!state.user
+
+/** Tizim bo'limiga huquqi bormi */
+export const isSuperAdmin = () => state.user?.role === SUPER_ADMIN_ROLE

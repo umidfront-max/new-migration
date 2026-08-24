@@ -6,7 +6,6 @@ const state = reactive({
   country: null, // FlowMap dan tanlangan davlat kodi
   railOpen: true,
   liveSos: true,
-  role: 'Super administrator',
 })
 
 export const periods = [
@@ -28,7 +27,5 @@ export function useApp() {
     toggleRail: () => (state.railOpen = !state.railOpen),
     liveSos: computed(() => state.liveSos),
     toggleLive: () => (state.liveSos = !state.liveSos),
-    role: computed(() => state.role),
-    setRole: (r) => (state.role = r),
   }
 }

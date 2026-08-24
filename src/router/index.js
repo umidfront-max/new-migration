@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { isAuthenticated } from '@/stores/auth'
+import { isAuthenticated, isSessionLoaded, isSuperAdmin, restoreSession } from '@/stores/auth'
 
 export const routes = [
   { path: '/login', component: () => import('../views/LoginView.vue'), meta: { title: 'Tizimga kirish', blank: true, guest: true } },
@@ -14,10 +14,10 @@ export const routes = [
   { path: '/return', component: () => import('../views/ReturnView.vue'), meta: { title: 'Qaytish monitoringi' } },
   { path: '/risk', component: () => import('../views/RiskView.vue'), meta: { title: 'AI Risk Score' } },
   { path: '/ai', component: () => import('../views/AiView.vue'), meta: { title: 'AI Tahlil' } },
-  { path: '/admin', component: () => import('../views/AdminView.vue'), meta: { title: 'Administrator paneli' } },
-  { path: '/users', component: () => import('../views/UsersView.vue'), meta: { title: 'Foydalanuvchilar' } },
-  { path: '/audit', component: () => import('../views/AuditView.vue'), meta: { title: 'Audit va jurnal' } },
-  { path: '/reports', component: () => import('../views/ReportsView.vue'), meta: { title: 'Hisobot va eksport' } },
+  { path: '/admin', component: () => import('../views/AdminView.vue'), meta: { title: 'Administrator paneli', admin: true } },
+  { path: '/users', component: () => import('../views/UsersView.vue'), meta: { title: 'Foydalanuvchilar', admin: true } },
+  { path: '/audit', component: () => import('../views/AuditView.vue'), meta: { title: 'Audit va jurnal', admin: true } },
+  { path: '/reports', component: () => import('../views/ReportsView.vue'), meta: { title: 'Hisobot va eksport', admin: true } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
@@ -27,11 +27,17 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-/* Kirmagan foydalanuvchi faqat /login sahifasini ko'radi */
-router.beforeEach((to) => {
+/* Kirmagan foydalanuvchi faqat /login sahifasini ko'radi,
+   `admin: true` sahifalar esa faqat super administratorga ochiq */
+router.beforeEach(async (to) => {
+  /* Sahifa yangilanganda foydalanuvchi hali yuklanmagan bo'ladi —
+     rolni tekshirishdan oldin sessiyani tiklab olamiz */
+  if (!isSessionLoaded() && isAuthenticated()) await restoreSession()
+
   const authed = isAuthenticated()
   if (!authed && !to.meta.guest) return { path: '/login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
   if (authed && to.meta.guest) return { path: '/' }
+  if (to.meta.admin && !isSuperAdmin()) return { path: '/' }
   return true
 })
 

@@ -13,7 +13,7 @@ const route = useRoute()
 const router = useRouter()
 const { state, setPeriod, setRegion, toggleRail } = useApp()
 const { theme, toggleTheme } = useTheme()
-const { user, signOut } = useAuth()
+const { user, signOut, isSuper } = useAuth()
 
 const mobileOpen = ref(false)
 const userOpen = ref(false)
@@ -21,7 +21,9 @@ const bellOpen = ref(false)
 const q = ref('')
 const searchEl = ref(null)
 
-const nav = [
+/* `admin: true` bo'lim faqat super administratorga ko'rinadi —
+   router ham shu sahifalarni o'sha shart bo'yicha qo'riqlaydi */
+const NAV = [
   { g: 'Monitoring', items: [
     { to: '/', icon: 'grid', label: 'Boshqaruv paneli' },
     { to: '/registry', icon: 'users', label: 'Migrantlar reyestri' },
@@ -39,7 +41,7 @@ const nav = [
     { to: '/risk', icon: 'gauge', label: 'AI Risk Score' },
     { to: '/ai', icon: 'brain', label: 'AI Tahlil' },
   ]},
-  { g: 'Tizim', items: [
+  { g: 'Tizim', admin: true, items: [
     { to: '/admin', icon: 'sliders', label: 'Administrator paneli' },
     { to: '/users', icon: 'user', label: 'Foydalanuvchilar' },
     { to: '/audit', icon: 'scroll', label: 'Audit va jurnal' },
@@ -47,16 +49,17 @@ const nav = [
   ]},
 ]
 
-const flat = nav.flatMap((g) => g.items)
-const current = computed(() => flat.find((i) => i.to === route.path))
+const nav = computed(() => NAV.filter((g) => !g.admin || isSuper.value))
+const flat = computed(() => nav.value.flatMap((g) => g.items))
+const current = computed(() => flat.value.find((i) => i.to === route.path))
 const title = computed(() => current.value?.label ?? route.meta.title ?? 'Boshqaruv paneli')
-const section = computed(() => nav.find((g) => g.items.some((i) => i.to === route.path))?.g ?? 'Monitoring')
+const section = computed(() => nav.value.find((g) => g.items.some((i) => i.to === route.path))?.g ?? 'Monitoring')
 
 /** Yon paneldagi qidiruv — bo'lim nomi bo'yicha filtrlaydi */
 const filtered = computed(() => {
   const s = q.value.trim().toLowerCase()
-  if (!s) return nav
-  return nav
+  if (!s) return nav.value
+  return nav.value
     .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(s)) }))
     .filter((g) => g.items.length)
 })
