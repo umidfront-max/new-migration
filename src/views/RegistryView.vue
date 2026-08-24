@@ -7,10 +7,12 @@ import RiskBadge from '@/components/ui/RiskBadge.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
 import { db, exportCollection } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
+import { usePagedList } from '@/composables/usePagedList'
 import { useApp } from '@/stores/app'
 import { fmt } from '@/composables/useCountUp'
 
-const migrants = db.migrants
+/* Jadval serverda sahifalanadi — `db.migrants` da faqat joriy sahifa turadi */
+const paged = db.migrants
 const countries = db.countries
 
 const router = useRouter()
@@ -21,32 +23,23 @@ const fCountry = ref('all')
 const fGender = ref('all')
 const fRisk = ref('all')
 const selected = ref(null)
-const page = ref(1)
-const PER = 12
 
-const list = computed(() =>
-  migrants.filter((m) => {
-    if (fCountry.value !== 'all' && m.countryCode !== fCountry.value) return false
-    if (fGender.value !== 'all' && m.gender !== fGender.value) return false
-    if (fRisk.value === 'risky' && m.risk === 'Xavf yo‘q') return false
-    if (fRisk.value === 'safe' && m.risk !== 'Xavf yo‘q') return false
-    if (q.value) {
-      const s = q.value.toLowerCase()
-      return m.name.toLowerCase().includes(s) || m.pinfl.includes(s)
-    }
-    return true
-  }),
-)
+/** Serverga yuboriladigan filtrlar — o'zgarsa ro'yxat qayta so'raladi */
+const filters = computed(() => ({
+  search: q.value.trim() || undefined,
+  country: fCountry.value === 'all' ? undefined : fCountry.value,
+  gender: fGender.value === 'all' ? undefined : fGender.value,
+  risky: fRisk.value === 'all' ? undefined : String(fRisk.value === 'risky'),
+}))
 
-const paged = computed(() => list.value.slice((page.value - 1) * PER, page.value * PER))
-const pages = computed(() => Math.max(1, Math.ceil(list.value.length / PER)))
+const { page, pages, count, loading, error, next, prev, go, reload } =
+  usePagedList('migrants', filters, { size: 10 })
 
 const reset = () => {
   q.value = ''
   fCountry.value = 'all'
   fGender.value = 'all'
   fRisk.value = 'all'
-  page.value = 1
 }
 
 /* -------------------------------------------------- qo'shish / tahrirlash */
@@ -60,22 +53,20 @@ const { modal, editing, flash, openAdd, openEdit, close, onSaved, onRemoved, run
 /** Joriy filtrlar bo'yicha CSV eksport */
 const exportList = () =>
   run(
-    () => exportCollection('migrants', {
-      search: q.value || undefined,
-      country: fCountry.value === 'all' ? undefined : fCountry.value,
-      gender: fGender.value === 'all' ? undefined : fGender.value,
-      risky: fRisk.value === 'all' ? undefined : String(fRisk.value === 'risky'),
-    }),
+    () => exportCollection('migrants', filters.value),
     'Reyestr CSV ko‘rinishida yuklab olindi',
   )
 
+/* Yozuv qo'shilsa boshiga qaytamiz, tahrirlansa — shu sahifa qayta o'qiladi */
 const saved = (e) => {
-  if (e.mode === 'add') page.value = 1
   onSaved(e)
+  if (e.mode === 'add' && page.value !== 1) go(1)
+  else reload()
 }
 const removed = (e) => {
   selected.value = null
   onRemoved(e)
+  reload()
 }
 
 /** Xaritada ko'rsatish — davlatni tanlab GIS sahifasiga o'tadi */
@@ -88,7 +79,7 @@ const showOnMap = (migrant) => {
 <template>
   <div class="page">
     <PanelCard eyebrow="Yagona reyestr" title="Migrantlar bazasi"
-               :hint="`${fmt(list.length)} ta yozuv topildi`" class="enter">
+               :hint="`${fmt(count)} ta yozuv topildi`" class="enter">
       <template #actions>
         <button class="btn" @click="exportList">
           <AppIcon name="export" :size="14" /> Eksport
@@ -105,25 +96,25 @@ const showOnMap = (migrant) => {
       <div class="filters">
         <label class="search">
           <AppIcon name="search" :size="16" />
-          <input v-model="q" placeholder="F.I.Sh yoki PINFL bo‘yicha qidirish" @input="page = 1" />
+          <input v-model="q" placeholder="F.I.Sh yoki PINFL bo‘yicha qidirish" />
           <button v-if="q" class="clr" @click="q = ''" aria-label="Tozalash">
             <AppIcon name="close" :size="14" />
           </button>
         </label>
 
-        <select v-model="fCountry" @change="page = 1">
+        <select v-model="fCountry">
           <option value="all">Barcha davlatlar</option>
           <option v-for="c in countries" :key="c.code" :value="c.code">{{ c.flag }} {{ c.name }}</option>
         </select>
 
-        <select v-model="fGender" @change="page = 1">
+        <select v-model="fGender">
           <option value="all">Jinsi: barchasi</option>
           <option value="Erkak">Erkaklar</option>
           <option value="Ayol">Ayollar</option>
           <option value="Voyaga yetmagan">Voyaga yetmaganlar</option>
         </select>
 
-        <select v-model="fRisk" @change="page = 1">
+        <select v-model="fRisk">
           <option value="all">Xavf: barchasi</option>
           <option value="risky">Faqat xavfli</option>
           <option value="safe">Xavf yo‘q</option>
@@ -132,7 +123,7 @@ const showOnMap = (migrant) => {
         <button class="btn ghost" @click="reset">Tozalash</button>
       </div>
 
-      <div class="tableWrap">
+      <div class="tableWrap" :class="{ busy: loading }">
         <table>
           <thead>
             <tr>
@@ -167,15 +158,21 @@ const showOnMap = (migrant) => {
           </TransitionGroup>
         </table>
 
-        <p v-if="!paged.length" class="empty">
+        <p v-if="error" class="empty bad">{{ error }}</p>
+        <p v-else-if="loading && !paged.length" class="empty">Serverdan olinmoqda…</p>
+        <p v-else-if="!paged.length" class="empty">
           Bu filtrlar bo‘yicha yozuv yo‘q. Qidiruvni kengaytiring yoki filtrlarni tozalang.
         </p>
       </div>
 
       <div class="pager">
-        <button :disabled="page === 1" @click="page--"><AppIcon name="chevron" :size="14" class="flip" /></button>
+        <button :disabled="page === 1 || loading" @click="prev">
+          <AppIcon name="chevron" :size="14" class="flip" />
+        </button>
         <span class="num">{{ page }} / {{ pages }}</span>
-        <button :disabled="page === pages" @click="page++"><AppIcon name="chevron" :size="14" /></button>
+        <button :disabled="page === pages || loading" @click="next">
+          <AppIcon name="chevron" :size="14" />
+        </button>
       </div>
     </PanelCard>
 
@@ -309,7 +306,9 @@ select option { background: var(--ink-800); }
 .btn.primary { background: var(--turk-dim); color: var(--turk); border-color: var(--turk); }
 
 /* jadval */
-.tableWrap { overflow-x: auto; margin: 0 -4px; }
+.tableWrap { overflow-x: auto; margin: 0 -4px; transition: opacity 0.2s ease; }
+/* Yangi sahifa kelguncha eskisi biroz so'niydi */
+.tableWrap.busy { opacity: 0.45; pointer-events: none; }
 table { width: 100%; border-collapse: collapse; min-width: 880px; }
 
 th {
@@ -349,6 +348,7 @@ td {
   font-size: 13px;
   color: var(--mist-dim);
 }
+.empty.bad { color: var(--coral); }
 
 .pager {
   display: flex;

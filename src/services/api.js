@@ -172,6 +172,16 @@ export const api = {
     }
   },
 
+  /**
+   * Bitta sahifani oladi — jadval navigatsiyasi uchun.
+   * `list` dan farqi: qolgan sahifalar aylanib chiqilmaydi.
+   */
+  async page(path, params = {}, signal) {
+    const data = await request(path, { params, signal })
+    if (Array.isArray(data)) return { rows: data, count: data.length }
+    return { rows: data?.results ?? [], count: data?.count ?? 0 }
+  },
+
   /** Fayl yuklab olish — CSV eksport uchun */
   async download(path, params) {
     const response = await request(path, { params, raw: true })

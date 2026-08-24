@@ -26,8 +26,9 @@ export const PAGE_DATA = {
   /* Boshqaruv paneli — KPI, hududlar chizmasi, grafiklar, tarkib */
   '/': ['kpis', 'districts', 'series', 'composition', 'purposes', 'violations', 'settings', SUMMARY],
 
-  /* Migrantlar reyestri — jadval + forma uchun davlatlar */
-  '/registry': ['migrants', 'countries'],
+  /* Migrantlar reyestri — jadval serverda sahifalanadi, shuning uchun
+     `migrants` bu yerda yo'q: sahifani ko'rinishning o'zi so'raydi */
+  '/registry': ['countries'],
 
   /* Chegara monitoringi */
   '/border': ['borderStats', 'borderPoints', 'borderSources', 'series'],
@@ -50,8 +51,8 @@ export const PAGE_DATA = {
   /* Qaytish monitoringi */
   '/return': ['returnStats', 'returnPrograms', 'series'],
 
-  /* AI Risk Score */
-  '/risk': ['migrants', 'countries', 'riskDistribution', 'riskWeights', 'settings', SUMMARY],
+  /* AI Risk Score — eng xavfli 10 tani ko'rinishning o'zi oladi */
+  '/risk': ['countries', 'riskDistribution', 'riskWeights', 'settings', SUMMARY],
 
   /* AI tahlil */
   '/ai': ['aiInsights', 'aiSuggestions', 'composition', 'integrations', 'series', SUMMARY],

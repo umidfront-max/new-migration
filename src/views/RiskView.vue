@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import PanelCard from '@/components/ui/PanelCard.vue'
 import RiskGauge from '@/components/charts/RiskGauge.vue'
 import DonutBreak from '@/components/charts/DonutBreak.vue'
@@ -7,11 +7,17 @@ import RiskBadge from '@/components/ui/RiskBadge.vue'
 import BarRank from '@/components/charts/BarRank.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import RecordModal from '@/components/ui/RecordModal.vue'
-import { db, setting, summary } from '@/stores/db'
+import { db, fetchList, setting, summary } from '@/stores/db'
 import { useRecordModal } from '@/composables/useRecords'
 import { fmt } from '@/composables/useCountUp'
 
-const migrants = db.migrants
+/* Reyestr jadvali `db.migrants` ni sahifalab ishlatadi — bu yerda
+   eng yuqori ballilarni tanlash uchun alohida ro'yxat olinadi */
+const migrants = ref([])
+onMounted(async () => {
+  migrants.value = await fetchList('migrants').catch(() => [])
+})
+
 const countries = db.countries
 const riskDistribution = db.riskDistribution
 const weights = db.riskWeights
@@ -31,7 +37,7 @@ const edit = (c, row) => {
 
 
 const topRisk = computed(() =>
-  [...migrants].sort((a, b) => b.score - a.score).slice(0, 10),
+  [...migrants.value].sort((a, b) => b.score - a.score).slice(0, 10),
 )
 
 const byCountry = computed(() =>

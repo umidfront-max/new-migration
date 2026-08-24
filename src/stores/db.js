@@ -77,6 +77,34 @@ export async function loadCollection(name, signal) {
   return db[name]
 }
 
+/**
+ * To'plamning bitta sahifasini serverdan oladi.
+ *
+ * `db[name]` shu sahifa bilan almashtiriladi — jadvaldagi tahrirlash va
+ * o'chirish aynan ko'rinib turgan qatorlar ustida ishlaydi. Sahifa keshga
+ * yozilmaydi: "Keyingi" bosilganda har safar yangi so'rov ketadi.
+ */
+export async function loadPageOf(name, { page = 1, size = 10, ...filters } = {}) {
+  const { rows, count } = await api.page(ENDPOINTS[name].path, {
+    ...listParams(name),
+    ...filters,
+    page,
+    page_size: size,
+  })
+  db[name].splice(0, db[name].length, ...rows.map((row) => fromApi(name, row)))
+  return { rows: db[name], count }
+}
+
+/**
+ * To'plamni `db` ga tegmasdan o'qiydi.
+ * Sahifalangan jadval bilan bir to'plamni baham ko'radigan, lekin o'z
+ * ro'yxatiga muhtoj panellar uchun.
+ */
+export async function fetchList(name, params = {}) {
+  const rows = await api.list(ENDPOINTS[name].path, { ...listParams(name), ...params })
+  return rows.map((row) => fromApi(name, row))
+}
+
 /** Ma'lumot allaqachon keshdami */
 export const isLoaded = (name) => fetched.has(name)
 
