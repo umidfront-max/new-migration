@@ -29,7 +29,25 @@ const serverError = ref('')
 const formEl = ref(null)
 const revealed = ref({})
 
-const optionsOf = (f) => (typeof f.options === 'function' ? f.options() : f.options || [])
+const optionsOf = (f) => {
+  const list = typeof f.options === 'function' ? f.options() : f.options || []
+  /* Ro'yxatda yo'q eski qiymat ham tanlovda ko'rinib tursin */
+  const current = form.value[f.key]
+  if (f.create && current && !list.some((o) => o.value === current)) {
+    return [{ value: current, label: current }, ...list]
+  }
+  return list
+}
+
+/* ------------------------------------------------- tanlovdan yangi yozuv
+   `create` ko'rsatilgan select yonida "+" tugmasi chiqadi: u shu to'plam
+   uchun ichki oyna ochadi, saqlangan yozuv nomi maydonga darhol tushadi. */
+const creating = ref(null)
+
+const onCreated = ({ row }) => {
+  form.value[creating.value.key] = row.name
+  errors.value = { ...errors.value, [creating.value.key]: undefined }
+}
 
 /* --------------------------------------------------------------- maskalar
    Sxemadagi `mask` maydoni kiritilayotgan matnni darhol formatlaydi.
@@ -74,6 +92,7 @@ watch(
   ([open]) => {
     if (!open) return
     form.value = props.record ? toFormModel(props.collection, props.record) : blankModel(props.collection)
+    creating.value = null
     errors.value = {}
     serverError.value = ''
     askDelete.value = false
@@ -160,7 +179,10 @@ const submit = async () => {
 
 /* Esc — oynani yopadi */
 const onKey = (e) => {
-  if (e.key === 'Escape' && props.open) emit('close')
+  /* Ichki oyna ochiq bo'lsa Esc faqat uni yopadi */
+  if (e.key !== 'Escape' || !props.open || creating.value || e.defaultPrevented) return
+  e.preventDefault()
+  emit('close')
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
@@ -212,9 +234,18 @@ const destroy = async () => {
                 {{ f.label }}<i v-if="f.required" class="req">*</i>
               </span>
 
-              <select v-if="f.type === 'select'" v-model="form[f.key]">
-                <option v-for="o in optionsOf(f)" :key="o.value" :value="o.value">{{ o.label }}</option>
-              </select>
+              <span v-if="f.type === 'select'" class="selRow">
+                <select v-model="form[f.key]">
+                  <option v-if="f.empty" value="">{{ f.empty }}</option>
+                  <option v-for="o in optionsOf(f)" :key="o.value" :value="o.value">{{ o.label }}</option>
+                </select>
+                <button v-if="f.create" type="button" class="addNew"
+                        :aria-label="`Yangi: ${schemas[f.create].label}`"
+                        :title="schemas[f.create].title.add"
+                        @click.prevent="creating = f">
+                  <AppIcon name="plus" :size="15" />
+                </button>
+              </span>
 
               <span v-else-if="f.type === 'bool'" class="boolRow">
                 <button type="button" class="sw" :class="{ on: form[f.key] }"
@@ -310,6 +341,13 @@ const destroy = async () => {
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Tanlovdagi "+" — ichki qo'shish oynasi -->
+  <RecordModal
+    v-if="creating"
+    :collection="creating.create" :open="!!creating"
+    @close="creating = null" @saved="onCreated"
+  />
 </template>
 
 <style scoped>
@@ -457,6 +495,20 @@ header h3 { font-size: 17px; margin-top: 4px; }
 }
 .fld textarea:focus { border-color: var(--turk); }
 .fld textarea::placeholder { color: var(--mist-dim); }
+
+.selRow { display: flex; gap: 8px; }
+.selRow select { flex: 1; min-width: 0; }
+.addNew {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  color: var(--turk);
+  transition: all 0.3s var(--ease-out);
+}
+.addNew:hover { border-color: var(--turk); background: var(--turk-dim); }
 
 .fld input,
 .fld select {

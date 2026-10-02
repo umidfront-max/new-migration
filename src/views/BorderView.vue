@@ -85,11 +85,6 @@ const openAdd = () => add('borderPoints')
       </PanelCard>
 
       <PanelCard eyebrow="Integratsiya" title="Ma’lumot manbalari" class="enter" :style="{ '--i': 5 }">
-        <template #actions>
-          <button class="v-btn add" @click="add('borderSources')">
-            <AppIcon name="plus" :size="14" /> Manba
-          </button>
-        </template>
         <ul class="src">
           <li v-for="(s, i) in borderSources" :key="s._id" :style="{ '--i': i }">
             <span class="dot" /> {{ s.name }}

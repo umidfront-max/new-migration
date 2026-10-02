@@ -27,8 +27,9 @@ export const PAGE_DATA = {
   '/': ['kpis', 'districts', 'series', 'composition', 'purposes', 'violations', 'settings', SUMMARY],
 
   /* Migrantlar reyestri — jadval serverda sahifalanadi, shuning uchun
-     `migrants` bu yerda yo'q: sahifani ko'rinishning o'zi so'raydi */
-  '/registry': ['countries'],
+     `migrants` bu yerda yo'q: sahifani ko'rinishning o'zi so'raydi.
+     `employers` — formadagi ish beruvchi tanlovi uchun */
+  '/registry': ['countries', 'employers'],
 
   /* Chegara monitoringi */
   '/border': ['borderStats', 'borderPoints', 'borderSources', 'series'],

@@ -64,9 +64,6 @@ const womenShare = computed(() => {
       <Transition name="flash">
         <p v-if="flash" class="v-flash"><AppIcon name="shield" :size="13" /> {{ flash }}</p>
       </Transition>
-      <button class="btn add" @click="add('kpis')">
-        <AppIcon name="plus" :size="14" /> KPI qo‘shish
-      </button>
     </div>
 
     <div class="kpis">
@@ -209,7 +206,7 @@ const womenShare = computed(() => {
   margin-bottom: -4px;
 }
 .kpiHead .v-flash { margin: 0; }
-.kpiHead .btn.add { margin-left: auto; }
+.kpiHead:empty { display: none; }
 
 .kpis {
   display: grid;
