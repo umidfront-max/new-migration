@@ -72,7 +72,6 @@ const womenShare = computed(() => {
         v-bind="k" :delay="i * 120"
         :spark="sparks[i]?.values"
         class="enter" :style="{ '--i': i }"
-        editable @edit="edit('kpis', k)"
       />
     </div>
 
