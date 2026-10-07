@@ -77,14 +77,15 @@ function arcPoints(a, b, bend = 0.2, n = 64) {
 
 function buildFlows() {
   const g = L.layerGroup()
-  const maxTotal = Math.max(...props.countries.map((c) => c.total))
+  /* Hamma qiymat 0 bo'lsa ham bo'linish NaN bermasin */
+  const maxTotal = Math.max(1, ...props.countries.map((c) => c.total || 0))
   const arcs = []
   const dots = []
 
   props.countries.forEach((c) => {
     const pts = arcPoints(props.origin, c)
     const tone = toneOf(c.risk)
-    const weight = 1.2 + (c.total / maxTotal) * 7
+    const weight = 1.2 + ((c.total || 0) / maxTotal) * 7
 
     const arc = L.polyline(pts, {
       color: tone,
@@ -94,7 +95,7 @@ function buildFlows() {
       interactive: false,
     }).addTo(g)
 
-    const radius = 5 + Math.sqrt(c.total / maxTotal) * 17
+    const radius = 5 + Math.sqrt((c.total || 0) / maxTotal) * 17
     const node = L.circleMarker([c.lat, c.lng], {
       radius,
       color: tone,
@@ -221,10 +222,10 @@ function buildSos() {
 
 function buildRegions() {
   const g = L.layerGroup()
-  const maxOut = Math.max(...props.regions.map((r) => r.out))
+  const maxOut = Math.max(1, ...props.regions.map((r) => r.out || 0))
   props.regions.forEach((r) => {
     const tone = toneOf(r.risk)
-    const radius = 4 + Math.sqrt(r.out / maxOut) * 12
+    const radius = 4 + Math.sqrt((r.out || 0) / maxOut) * 12
     L.circleMarker([r.lat, r.lng], {
       radius,
       color: tone,
