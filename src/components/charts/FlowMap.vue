@@ -39,7 +39,7 @@ const nodes = computed(() => {
   const dMin = Math.min(...dists)
   const dMax = Math.max(...dists)
   const totals = props.countries.map((c) => c.total)
-  const tMax = Math.max(...totals)
+  const tMax = Math.max(1, ...totals.map((t) => t || 0))
 
   return props.countries.map((c, i) => {
     const t = (Math.log(c.dist) - dMin) / (dMax - dMin || 1)
@@ -47,7 +47,7 @@ const nodes = computed(() => {
     const rad = ((c.angle - 90) * Math.PI) / 180
     const x = CX + Math.cos(rad) * r * 1.42
     const y = CY + Math.sin(rad) * r
-    const size = 8 + Math.sqrt(c.total / tMax) * 22
+    const size = 8 + Math.sqrt((c.total || 0) / tMax) * 22
     const width = 1.2 + (c.total / tMax) * 9
     // Yoyni biroz egish uchun boshqaruv nuqtasi
     const mx = (CX + x) / 2

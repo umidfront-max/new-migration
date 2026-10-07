@@ -26,7 +26,8 @@ const total = computed(() => props.items.reduce((a, b) => a + b.value, 0))
 const arcs = computed(() => {
   let acc = 0
   return props.items.map((it, i) => {
-    const frac = it.value / total.value
+    /* Hamma qiymat 0 bo'lsa ulush ham 0 — NaN% chiqmasin */
+    const frac = total.value ? (it.value || 0) / total.value : 0
     const len = Math.max(C * frac - GAP, 1)
     const off = -acc * C
     acc += frac

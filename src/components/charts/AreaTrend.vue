@@ -19,7 +19,8 @@ const P = { t: 18, r: 14, b: 28, l: 46 }
 
 const maxV = computed(() => {
   const all = props.series.flatMap((s) => s.values)
-  return Math.max(...all) * 1.12
+  /* Hamma qiymat 0 bo'lsa ham o'q chizilsin — NaN chiqmasin */
+  return (Math.max(0, ...all) || 1) * 1.12
 })
 
 const xAt = (i) => P.l + (i / (props.labels.length - 1)) * (W - P.l - P.r)

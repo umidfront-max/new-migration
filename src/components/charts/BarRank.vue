@@ -12,7 +12,8 @@ const props = defineProps({
 })
 
 const { el, shown } = useReveal()
-const peak = computed(() => props.max || Math.max(...props.items.map((i) => i.value)))
+/* Hamma qiymat 0 bo'lsa ham bo'linish NaN bermasin */
+const peak = computed(() => props.max || Math.max(1, ...props.items.map((i) => i.value || 0)))
 const tone = (r) => (r >= 55 ? 'coral' : r >= 40 ? 'saffron' : 'turk')
 </script>
 
