@@ -24,12 +24,14 @@ const props = defineProps({
 })
 const emit = defineEmits(['select'])
 
-/* Plitka manbai — o'z serveringizga ko'chirish uchun shu ikki qatorni almashtiring.
-   Mavzuga qarab qorong'i yoki yorug' asos tanlanadi. */
+/* Plitka manbai — o'z serveringizga ko'chirish uchun shu qatorlarni almashtiring.
+   Esri Canvas API kalit talab qilmaydi; mavzuga qarab qorong'i yoki yorug' asos.
+   Bu plitkalar 16-masshtabgacha chiziladi. */
 const tileUrl = (t) =>
-  `https://{s}.basemaps.cartocdn.com/${t === 'light' ? 'light_all' : 'dark_all'}/{z}/{x}/{y}{r}.png`
+  `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${t === 'light' ? 'World_Light_Gray_Base' : 'World_Dark_Gray_Base'}/MapServer/tile/{z}/{y}/{x}`
+const TILE_MAX_ZOOM = 16
 const TILE_ATTR =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
 const host = ref(null)
 const map = shallowRef(null)
@@ -318,7 +320,7 @@ onMounted(() => {
     scrollWheelZoom: 'center',
   })
   layers.value.tiles = L.tileLayer(tileUrl(theme.value), {
-    attribution: TILE_ATTR, subdomains: 'abcd', maxZoom: 20,
+    attribution: TILE_ATTR, maxNativeZoom: TILE_MAX_ZOOM, maxZoom: 20,
   }).addTo(m)
   L.control.zoom({ position: 'bottomright' }).addTo(m)
 

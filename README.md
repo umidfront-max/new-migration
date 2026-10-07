@@ -118,7 +118,7 @@ Ikkalasi ham `state.country` orqali sahifadagi jadval bilan bog'langan.
 
 ### Plitkalarni almashtirish
 
-Standart holatda CARTO dark-matter plitkalari ishlatiladi. Davlat tizimi uchun
+Standart holatda Esri Canvas (Light Gray / Dark Gray) plitkalari ishlatiladi — API kalit talab qilmaydi. Davlat tizimi uchun
 plitkalarni o'z serveringizga ko'chirish kerak — `GeoMap.vue` boshidagi ikki
 o'zgaruvchini almashtiring:
 
