@@ -198,7 +198,7 @@ const showOnMap = (migrant) => {
           <div><dt>Oilaviy ahvoli</dt><dd>{{ selected.marital }}</dd></div>
           <div><dt>Sog‘lig‘i</dt><dd>{{ selected.health }}</dd></div>
           <div><dt>Sudlanganligi</dt><dd>{{ selected.convicted ? 'Bor' : 'Yo‘q' }}</dd></div>
-          <div><dt>Chiqqan hududi</dt><dd>{{ selected.region }}</dd></div>
+          <div><dt>Chiqqan hududi</dt><dd>{{ selected.region }}<template v-if="selected.district">, {{ selected.district }}</template></dd></div>
           <div><dt>Chiqish sanasi</dt><dd class="num">{{ selected.exitDate }}</dd></div>
           <div><dt>Chiqish maqsadi</dt><dd>{{ selected.purpose }}</dd></div>
           <div><dt>Ish joyi</dt><dd>{{ selected.employer }}</dd></div>

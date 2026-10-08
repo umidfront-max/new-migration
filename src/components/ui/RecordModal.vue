@@ -40,6 +40,10 @@ const optionsOf = (f) => {
   return list
 }
 
+/** Majburiylik shartli bo'lishi mumkin — masalan tuman faqat viloyatda tumanlar bo'lsa */
+const isRequired = (f) =>
+  typeof f.required === 'function' ? !!f.required(form.value) : !!f.required
+
 /* ------------------------------------------------- tanlovdan yangi yozuv
    `create` ko'rsatilgan select yonida "+" tugmasi chiqadi: u shu to'plam
    uchun ichki oyna ochadi, saqlangan yozuv nomi maydonga darhol tushadi. */
@@ -115,7 +119,7 @@ const validate = () => {
     if (f.type === 'series') return
     const v = form.value[f.key]
     if (f.type === 'multi') {
-      if (f.required && !(v || []).length) e[f.key] = 'Kamida bittasini tanlang'
+      if (isRequired(f) && !(v || []).length) e[f.key] = 'Kamida bittasini tanlang'
       return
     }
     const empty = v === '' || v === null || v === undefined
@@ -132,7 +136,7 @@ const validate = () => {
       return
     }
 
-    if (f.required && empty) e[f.key] = 'To‘ldirilishi shart'
+    if (isRequired(f) && empty) e[f.key] = 'To‘ldirilishi shart'
     else if (!empty && f.pattern && !new RegExp(f.pattern).test(String(v))) e[f.key] = f.hint || 'Format noto‘g‘ri'
     else if (!empty && f.type === 'number') {
       const n = Number(v)
@@ -239,7 +243,7 @@ const destroy = async () => {
               class="fld" :class="{ wide: f.span === 2, bad: errors[f.key] }" :style="{ '--i': i }"
             >
               <span class="lb">
-                {{ f.label }}<i v-if="f.required" class="req">*</i>
+                {{ f.label }}<i v-if="isRequired(f)" class="req">*</i>
               </span>
 
               <span v-if="f.type === 'select'" class="selRow">
