@@ -2,7 +2,6 @@
 /* Universal qo'shish/tahrirlash oynasi — sxema asosida forma quradi */
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
-import TreeSelect from '@/components/ui/TreeSelect.vue'
 import { schemas, blankModel, toFormModel } from '@/data/schemas'
 import { months } from '@/data/labels'
 import { ApiError, removeRecord, saveRecord } from '@/stores/db'
@@ -58,13 +57,6 @@ const onSelect = (f) => {
   schema.value.fields
     .filter((x) => x.dependsOn === f.key)
     .forEach((x) => { form.value[x.key] = '' })
-}
-
-/** Daraxt tanlovi (`tree`): ota qiymat `f.parent` ga, bola qiymat `f.key` ga yoziladi */
-const onTree = (f, parentValue, childValue) => {
-  form.value[f.parent] = parentValue
-  form.value[f.key] = childValue
-  errors.value = { ...errors.value, [f.key]: undefined, [f.parent]: undefined }
 }
 
 const onCreated = ({ row }) => {
@@ -129,14 +121,6 @@ const validate = () => {
   schema.value.fields.forEach((f) => {
     if (f.type === 'series') return
     const v = form.value[f.key]
-    if (f.type === 'tree') {
-      /* Ota tanlanishi shart; uning bolalari bo'lsa — bolasi ham */
-      const node = optionsOf(f).find((n) => n.value === form.value[f.parent])
-      if (!isRequired(f)) return
-      if (!node) e[f.key] = 'Viloyat va tumanni tanlang'
-      else if (node.children.length && !v) e[f.key] = 'Tumanni tanlang'
-      return
-    }
     if (f.type === 'multi') {
       if (isRequired(f) && !(v || []).length) e[f.key] = 'Kamida bittasini tanlang'
       return
@@ -257,9 +241,7 @@ const destroy = async () => {
           </Transition>
 
           <form ref="formEl" class="grid" @submit.prevent="submit">
-            <!-- Daraxt tanlovi ichida tugmalar ko'p — label bosishni birinchisiga uzatmasin -->
-            <component
-              :is="f.type === 'tree' ? 'div' : 'label'"
+            <label
               v-for="(f, i) in schema.fields" :key="f.key"
               class="fld" :class="{ wide: f.span === 2, bad: errors[f.key] }" :style="{ '--i': i }"
             >
@@ -281,13 +263,6 @@ const destroy = async () => {
                   <AppIcon name="plus" :size="15" />
                 </button>
               </span>
-
-              <TreeSelect
-                v-else-if="f.type === 'tree'"
-                :tree="optionsOf(f)" :parent="form[f.parent]" :child="form[f.key]"
-                :placeholder="f.placeholder" :invalid="!!(errors[f.key] || errors[f.parent])"
-                @select="(p, c) => onTree(f, p, c)"
-              />
 
               <span v-else-if="f.type === 'bool'" class="boolRow">
                 <button type="button" class="sw" :class="{ on: form[f.key] }"
@@ -350,14 +325,12 @@ const destroy = async () => {
                 :step="f.step" :min="f.min" :max="f.max" :placeholder="f.placeholder"
               />
 
-              <span v-if="errors[f.key] || (f.parent && errors[f.parent])" class="err">
-                {{ errors[f.key] || errors[f.parent] }}
-              </span>
+              <span v-if="errors[f.key]" class="err">{{ errors[f.key] }}</span>
               <span v-else-if="f.type === 'multi'" class="hint">
                 {{ (form[f.key] || []).length }} ta tanlandi{{ f.hint ? ' · ' + f.hint : '' }}
               </span>
               <span v-else-if="f.hint" class="hint">{{ f.hint }}</span>
-            </component>
+            </label>
           </form>
 
           <footer>

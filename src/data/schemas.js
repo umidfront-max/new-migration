@@ -16,17 +16,12 @@ const tones = ['turk', 'lapis', 'saffron', 'coral', 'violet', 'mist']
 
 const opt = (arr) => arr.map((v) => ({ value: v, label: v }))
 const countryOpts = () => db.countries.map((c) => ({ value: c.code, label: `${c.flag} ${c.name}` }))
+const regionOpts = () => db.regions.map((r) => ({ value: r.name, label: r.name }))
 
 const regionOptsAll = () => db.regions.map((r) => ({ value: r.name, label: r.name }))
 const countryNameOpts = () => db.countries.map((c) => ({ value: c.name, label: `${c.flag} ${c.name}` }))
 const employerOpts = () => db.employers.map((e) => ({ value: e.name, label: e.name }))
 const roleOpts = () => db.roles.map((r) => ({ value: r.name, label: r.name }))
-/** Viloyat → tumanlar daraxti (daraxt tanlovi uchun) */
-const regionTree = () =>
-  db.regions
-    .map((r) => ({ value: r.name, label: r.name, children: districtOptsOf({ region: r.name }) }))
-    .sort((a, b) => a.label.localeCompare(b.label))
-
 /** Tanlangan viloyat tumanlari — viloyat tanlanmasa ro'yxat bo'sh */
 const districtOptsOf = (form) =>
   db.districts
@@ -61,7 +56,6 @@ export const schemas = {
       health: 'Sog‘lom',
       convicted: false,
       countryCode: db.countries[0]?.code,
-      region: '',
     }),
     fields: [
       { key: 'name', label: 'F.I.Sh', type: 'text', required: true, span: 2, placeholder: 'Karimov Jasur' },
@@ -82,12 +76,15 @@ export const schemas = {
       { key: 'convicted', label: 'Sudlangan', type: 'bool' },
       { key: 'countryCode', label: 'Qabul qiluvchi davlat', type: 'select', options: countryOpts, required: true },
       { key: 'purpose', label: 'Chiqish maqsadi', type: 'select', options: opt(purposeList) },
-      /* Viloyat bosilsa tumanlari ochiladi; tanlov region va district ni birga yozadi.
-         Tumanlari kiritilgan viloyatda tuman ham majburiy. */
       {
-        key: 'district', parent: 'region', label: 'Chiqqan viloyati / tumani', type: 'tree',
-        options: regionTree, required: true, span: 2,
-        placeholder: '— viloyat va tumanni tanlang —',
+        key: 'region', label: 'Chiqqan viloyati', type: 'select', options: regionOpts, required: true,
+        empty: '— viloyatni tanlang —',
+      },
+      {
+        key: 'district', label: 'Chiqqan tumani / shahri', type: 'select', options: districtOptsOf,
+        dependsOn: 'region', empty: '— tumanni tanlang —', emptyNoParent: '— avval viloyatni tanlang —',
+        /* Viloyatning tumanlari kiritilgan bo'lsa — tuman ham tanlanishi shart */
+        required: (form) => districtOptsOf(form).length > 0,
       },
       { key: 'exitDate', label: 'Chiqish sanasi', type: 'text', placeholder: '12.03.2026' },
       {
@@ -584,9 +581,7 @@ export function blankModel(name) {
     if (f.type === 'multi') return []
     return ''
   }
-  /* Daraxt maydonining ota qiymati (`parent`) ham modelda turadi */
-  const parents = s.fields.filter((f) => f.parent).map((f) => [f.parent, ''])
-  const base = Object.fromEntries([...parents, ...s.fields.map((f) => [f.key, empty(f)])])
+  const base = Object.fromEntries(s.fields.map((f) => [f.key, empty(f)]))
   return { ...base, ...(s.defaults?.() ?? {}) }
 }
 
@@ -600,9 +595,5 @@ export function toFormModel(name, row) {
     if (f.type === 'series' || f.type === 'multi') return [...(src[f.key] || [])]
     return src[f.key]
   }
-  const parents = s.fields.filter((f) => f.parent).map((f) => [f.parent, src[f.parent] ?? ''])
-  return {
-    ...blankModel(name),
-    ...Object.fromEntries([...parents, ...s.fields.map((f) => [f.key, pick(f)])]),
-  }
+  return { ...blankModel(name), ...Object.fromEntries(s.fields.map((f) => [f.key, pick(f)])) }
 }
