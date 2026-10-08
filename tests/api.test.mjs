@@ -34,7 +34,7 @@ import * as store from '@/stores/db'
 
 const {
   db, summary, status, COLLECTIONS, SUMMARY,
-  loadCore, loadPage, ensureData, isLoaded, loadPageOf, loadCollection,
+  loadCore, loadPage, ensureData, isLoaded, loadPageOf, loadCollection, fetchList,
   addRecord, updateRecord, removeRecord, patchRecord,
   resolveSosEvent, reopenSosEvent, generateReport, downloadReport,
   exportCollection, setting, serie,
@@ -104,14 +104,16 @@ check('hududda bandlik', db.regions.some((row) => row.employed > 0))
 
 /* ------------------------------------------------------------------ CRUD */
 section('6. MIGRANT — RISK BALL SERVERDA')
+const district = (await fetchList('districts', { region__name: db.regions[0].name }))[0]
 const migrant = await addRecord('migrants', {
   pinfl: '45000000000099', name: 'Sinov Migrant', countryCode: 'RU',
-  region: db.regions[0].name, purpose: 'Ishlash (norasmiy)', gender: 'Erkak',
-  employer: 'Ro‘yxatdan o‘tmagan', score: null,
+  region: db.regions[0].name, district: district?.name, purpose: 'Ishlash (norasmiy)',
+  gender: 'Erkak', employer: 'Ro‘yxatdan o‘tmagan', score: null,
 })
 check('yaratildi', !!migrant._id)
 check('ball server hisobladi', migrant.score > 0, String(migrant.score))
 check('davlat nomi to‘ldi', migrant.country === 'Rossiya')
+check('tuman saqlandi', !!district && migrant.district === district.name, migrant.district)
 
 const renamed = await updateRecord('migrants', migrant._id, { name: 'Yangilangan' })
 check('tahrirlandi', renamed.name === 'Yangilangan')
