@@ -76,10 +76,13 @@ export const schemas = {
       { key: 'convicted', label: 'Sudlangan', type: 'bool' },
       { key: 'countryCode', label: 'Qabul qiluvchi davlat', type: 'select', options: countryOpts, required: true },
       { key: 'purpose', label: 'Chiqish maqsadi', type: 'select', options: opt(purposeList) },
-      { key: 'region', label: 'Chiqqan viloyati', type: 'select', options: regionOpts, required: true },
+      {
+        key: 'region', label: 'Chiqqan viloyati', type: 'select', options: regionOpts, required: true,
+        empty: '— viloyatni tanlang —',
+      },
       {
         key: 'district', label: 'Chiqqan tumani / shahri', type: 'select', options: districtOptsOf,
-        dependsOn: 'region', empty: '— tanlang —',
+        dependsOn: 'region', empty: '— tumanni tanlang —', emptyNoParent: '— avval viloyatni tanlang —',
         /* Viloyatning tumanlari kiritilgan bo'lsa — tuman ham tanlanishi shart */
         required: (form) => districtOptsOf(form).length > 0,
       },
@@ -189,7 +192,7 @@ export const schemas = {
       },
       {
         key: 'district', label: 'Tuman / shahar', type: 'select', options: districtOptsOf,
-        empty: '— Butun viloyat —', dependsOn: 'region',
+        empty: '— Butun viloyat —', dependsOn: 'region', emptyNoParent: '— avval viloyatni tanlang —',
         hint: 'bo‘sh qolsa — butun viloyatga biriktiriladi',
       },
       { key: 'unit', label: 'Tashkilot / bo‘lim', type: 'text', span: 2 },

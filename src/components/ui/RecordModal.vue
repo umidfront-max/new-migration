@@ -49,6 +49,9 @@ const isRequired = (f) =>
    uchun ichki oyna ochadi, saqlangan yozuv nomi maydonga darhol tushadi. */
 const creating = ref(null)
 
+/** Bog'liq maydon asosiy tanlov bo'sh bo'lsa o'chiq turadi (viloyat tanlanmagan → tuman yo'q) */
+const waitsParent = (f) => !!f.dependsOn && !form.value[f.dependsOn]
+
 /** Tanlov o'zgarganda unga bog'liq (`dependsOn`) maydonlar tozalanadi */
 const onSelect = (f) => {
   schema.value.fields
@@ -247,8 +250,10 @@ const destroy = async () => {
               </span>
 
               <span v-if="f.type === 'select'" class="selRow">
-                <select v-model="form[f.key]" @change="onSelect(f)">
-                  <option v-if="f.empty" value="">{{ f.empty }}</option>
+                <select v-model="form[f.key]" :disabled="waitsParent(f)" @change="onSelect(f)">
+                  <option v-if="f.empty" value="">
+                    {{ waitsParent(f) && f.emptyNoParent ? f.emptyNoParent : f.empty }}
+                  </option>
                   <option v-for="o in optionsOf(f)" :key="o.value" :value="o.value">{{ o.label }}</option>
                 </select>
                 <button v-if="f.create" type="button" class="addNew"
@@ -536,6 +541,7 @@ header h3 { font-size: 17px; margin-top: 4px; }
 }
 .fld input:focus,
 .fld select:focus { border-color: var(--turk); }
+.fld select:disabled { opacity: 0.55; cursor: not-allowed; }
 .fld input::placeholder { color: var(--mist-dim); }
 .fld select option { background: var(--ink-800); }
 .fld.bad input,
