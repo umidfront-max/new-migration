@@ -28,8 +28,9 @@ export const PAGE_DATA = {
 
   /* Migrantlar reyestri — jadval serverda sahifalanadi, shuning uchun
      `migrants` bu yerda yo'q: sahifani ko'rinishning o'zi so'raydi.
-     `employers` — formadagi ish beruvchi tanlovi uchun */
-  '/registry': ['countries', 'employers'],
+     `employers` — formadagi ish beruvchi tanlovi uchun,
+     `districts` — chiqqan tumanni tanlash uchun */
+  '/registry': ['countries', 'employers', 'districts'],
 
   /* Chegara monitoringi */
   '/border': ['borderStats', 'borderPoints', 'borderSources', 'series'],

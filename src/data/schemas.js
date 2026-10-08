@@ -1,6 +1,7 @@
 /* ==========================================================================
    Forma sxemalari — RecordModal shu ta'rif asosida forma quradi.
    Har bir maydon: { key, label, type, options, required, span, hint }
+   required — true yoki forma qiymatlaridan hisoblanadigan funksiya
    type: text | number | select | bool
    ========================================================================== */
 import { db } from '@/stores/db'
@@ -39,8 +40,13 @@ export const schemas = {
   migrants: {
     label: 'Migrant',
     title: { add: 'Yangi migrant qo‘shish', edit: 'Migrant ma’lumotini tahrirlash' },
-    /* Risk ball yuborilmaydi — server o'zi hisoblaydi; bo'sh sana — null */
-    derive: (v) => ({ ...withCountry(v), exitDate: v.exitDate || null }),
+    /* Risk ball yuborilmaydi — server o'zi hisoblaydi; bo'sh sana va tuman — null */
+    derive: (v) => ({
+      ...withCountry(v),
+      exitDate: v.exitDate || null,
+      district: (v.region && v.district) || null,
+    }),
+    toForm: (r) => ({ ...r, district: r.district || '' }),
     defaults: () => ({
       gender: 'Erkak',
       nationality: 'O‘zbek',
@@ -69,8 +75,14 @@ export const schemas = {
       { key: 'health', label: 'Sog‘lig‘i', type: 'select', options: opt(['Sog‘lom', 'Surunkali kasallik', 'Nogironlik']) },
       { key: 'convicted', label: 'Sudlangan', type: 'bool' },
       { key: 'countryCode', label: 'Qabul qiluvchi davlat', type: 'select', options: countryOpts, required: true },
-      { key: 'region', label: 'Chiqqan hududi', type: 'select', options: regionOpts, required: true },
       { key: 'purpose', label: 'Chiqish maqsadi', type: 'select', options: opt(purposeList) },
+      { key: 'region', label: 'Chiqqan viloyati', type: 'select', options: regionOpts, required: true },
+      {
+        key: 'district', label: 'Chiqqan tumani / shahri', type: 'select', options: districtOptsOf,
+        dependsOn: 'region', empty: '— tanlang —',
+        /* Viloyatning tumanlari kiritilgan bo'lsa — tuman ham tanlanishi shart */
+        required: (form) => districtOptsOf(form).length > 0,
+      },
       { key: 'exitDate', label: 'Chiqish sanasi', type: 'text', placeholder: '12.03.2026' },
       {
         key: 'employer', label: 'Ish beruvchi', type: 'select', span: 2,
@@ -208,8 +220,6 @@ export const schemas = {
     defaults: () => ({
       status: 'Kuzatuvda',
       employment: 'Rasmiy shartnoma',
-      sent: 0,
-      remit: 0,
       countries: [],
     }),
     fields: [
@@ -225,8 +235,6 @@ export const schemas = {
         key: 'countries', label: 'Qaysi davlatlarga yuboradi', type: 'multi', span: 2,
         required: true, options: countryNameOpts, hint: 'bir nechtasini tanlash mumkin',
       },
-      { key: 'sent', label: 'Yuborilgan migrantlar', type: 'number' },
-      { key: 'remit', label: 'Jo‘natma (mln $)', type: 'number' },
     ],
   },
 

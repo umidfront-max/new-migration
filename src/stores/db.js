@@ -219,11 +219,20 @@ const ensureWritable = (name) => {
   }
 }
 
+/**
+ * Yozuv o'zgarganda server qayta hisoblaydigan boshqa to'plamlar.
+ * Masalan, ish beruvchining "yuborilgan migrantlar" soni migrantlardan
+ * olinadi — keyingi ochilishda serverdan yangisi so'raladi.
+ */
+const DEPENDENTS = { migrants: ['employers', SUMMARY] }
+const markStale = (name) => (DEPENDENTS[name] || []).forEach((dep) => fetched.delete(dep))
+
 /** Yangi yozuv qo'shadi */
 export async function addRecord(name, data) {
   ensureWritable(name)
   const created = fromApi(name, await api.post(ENDPOINTS[name].path, toApi(name, data)))
   db[name].unshift(created)
+  markStale(name)
   return created
 }
 
@@ -236,6 +245,7 @@ export async function updateRecord(name, id, data) {
   const path = detailPath(name, db[name][index])
   const updated = fromApi(name, await api.patch(path, toApi(name, data)))
   db[name].splice(index, 1, updated)
+  markStale(name)
   return updated
 }
 
@@ -247,6 +257,7 @@ export async function removeRecord(name, id) {
 
   await api.delete(detailPath(name, db[name][index]))
   db[name].splice(index, 1)
+  markStale(name)
   return true
 }
 

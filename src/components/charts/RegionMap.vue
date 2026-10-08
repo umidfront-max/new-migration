@@ -31,10 +31,14 @@ const city = computed(() => uzRegions.find((r) => r.name === 'Toshkent shahri'))
 
 const tone = (risk) => (risk >= 40 ? 'coral' : risk >= 30 ? 'saffron' : 'turk')
 
+/** Xarita faqat Toshkent viloyati — boshqa hududlarning tumanlari hisobga olinmaydi */
+const REGION = 'Toshkent viloyati'
+const regionDistricts = computed(() => db.districts.filter((x) => x.region === REGION))
+
 /** Chegara chizmasi bazadagi ko'rsatkich bilan birlashtiriladi */
 const shapes = computed(() =>
   tashkentDistricts.map((d) => {
-    const stat = db.districts.find((x) => x.name === d.name)
+    const stat = regionDistricts.value.find((x) => x.name === d.name)
     return { ...d, stat, tone: stat ? tone(stat.risk) : 'mist' }
   }),
 )
@@ -47,9 +51,9 @@ const ranked = computed(() => {
 })
 
 const totals = computed(() => ({
-  out: db.districts.reduce((a, d) => a + (d.out || 0), 0),
-  back: db.districts.reduce((a, d) => a + (d.back || 0), 0),
-  count: db.districts.length,
+  out: regionDistricts.value.reduce((a, d) => a + (d.out || 0), 0),
+  back: regionDistricts.value.reduce((a, d) => a + (d.back || 0), 0),
+  count: shapes.value.length,
 }))
 
 const active = computed(() => shapes.value.find((s) => s.name === hover.value))
