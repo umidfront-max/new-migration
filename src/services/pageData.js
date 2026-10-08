@@ -61,8 +61,8 @@ export const PAGE_DATA = {
   /* Administrator paneli */
   '/admin': ['roles', 'settings', 'integrations'],
 
-  /* Foydalanuvchilar — formada rol tanlanadi */
-  '/users': ['users', 'roles'],
+  /* Foydalanuvchilar — formada rol, viloyat va tuman tanlanadi */
+  '/users': ['users', 'roles', 'districts'],
 
   /* Audit va jurnal */
   '/audit': ['auditStats', 'auditLog'],

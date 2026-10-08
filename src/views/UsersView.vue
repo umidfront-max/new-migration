@@ -15,17 +15,24 @@ const { user: me } = useAuth()
 const q = ref('')
 const fRole = ref('all')
 const fStatus = ref('all')
+const fRegion = ref('all')
+
+/** Biriktirilgan hudud: tuman → "Viloyat · Tuman", faqat viloyat → viloyat, bo'sh → respublika */
+const territoryOf = (u) =>
+  u.district ? `${u.region} · ${u.district}` : u.region || 'Respublika'
 
 const list = computed(() =>
   users.filter((u) => {
     if (fRole.value !== 'all' && u.role !== fRole.value) return false
     if (fStatus.value !== 'all' && u.status !== fStatus.value) return false
+    if (fRegion.value !== 'all' && (u.region || '') !== fRegion.value) return false
     if (q.value) {
       const s = q.value.toLowerCase()
       return (
         u.name.toLowerCase().includes(s) ||
         u.login.toLowerCase().includes(s) ||
-        (u.unit || '').toLowerCase().includes(s)
+        (u.unit || '').toLowerCase().includes(s) ||
+        territoryOf(u).toLowerCase().includes(s)
       )
     }
     return true
@@ -72,6 +79,7 @@ const reset = () => {
   q.value = ''
   fRole.value = 'all'
   fStatus.value = 'all'
+  fRegion.value = 'all'
 }
 </script>
 
@@ -106,7 +114,7 @@ const reset = () => {
         <div class="filters">
           <label class="search">
             <AppIcon name="search" :size="16" />
-            <input v-model="q" placeholder="F.I.Sh, login yoki bo‘lim bo‘yicha" />
+            <input v-model="q" placeholder="F.I.Sh, login, bo‘lim yoki hudud bo‘yicha" />
             <button v-if="q" class="clr" aria-label="Tozalash" @click="q = ''">
               <AppIcon name="close" :size="14" />
             </button>
@@ -115,6 +123,12 @@ const reset = () => {
           <select v-model="fRole">
             <option value="all">Barcha rollar</option>
             <option v-for="r in roles" :key="r._id" :value="r.name">{{ r.name }}</option>
+          </select>
+
+          <select v-model="fRegion">
+            <option value="all">Barcha hududlar</option>
+            <option value="">Respublika</option>
+            <option v-for="r in db.regions" :key="r._id" :value="r.name">{{ r.name }}</option>
           </select>
 
           <select v-model="fStatus">
@@ -131,7 +145,7 @@ const reset = () => {
             <thead>
               <tr>
                 <th>Foydalanuvchi</th><th>Login</th><th>Roli</th>
-                <th>Bo‘limi</th><th>Parol</th><th>Holati</th><th></th>
+                <th>Hududi</th><th>Bo‘limi</th><th>Parol</th><th>Holati</th><th></th>
               </tr>
             </thead>
             <TransitionGroup tag="tbody" name="list">
@@ -147,6 +161,7 @@ const reset = () => {
                 </td>
                 <td class="num lg">{{ u.login }}</td>
                 <td class="muted">{{ u.role }}</td>
+                <td class="muted">{{ territoryOf(u) }}</td>
                 <td class="muted">{{ u.unit }}</td>
                 <td>
                   <span v-if="u.hasPassword" class="pw set">

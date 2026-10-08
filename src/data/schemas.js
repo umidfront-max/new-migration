@@ -21,6 +21,12 @@ const regionOptsAll = () => db.regions.map((r) => ({ value: r.name, label: r.nam
 const countryNameOpts = () => db.countries.map((c) => ({ value: c.name, label: `${c.flag} ${c.name}` }))
 const employerOpts = () => db.employers.map((e) => ({ value: e.name, label: e.name }))
 const roleOpts = () => db.roles.map((r) => ({ value: r.name, label: r.name }))
+/** Tanlangan viloyat tumanlari — viloyat tanlanmasa ro'yxat bo'sh */
+const districtOptsOf = (form) =>
+  db.districts
+    .filter((d) => form.region && d.region === form.region)
+    .map((d) => ({ value: d.name, label: d.name }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 
 /** Davlat kodidan nom va bayroqni to'ldiradi */
 const withCountry = (v) => {
@@ -148,8 +154,15 @@ export const schemas = {
   users: {
     label: 'Foydalanuvchi',
     title: { add: 'Yangi foydalanuvchi qo‘shish', edit: 'Foydalanuvchini tahrirlash' },
-    derive: (v) => ({ ...v, login: String(v.login || '').trim().toLowerCase() }),
-    defaults: () => ({ status: 'Faol', role: db.roles[0]?.name }),
+    /* Bo'sh viloyat/tuman — respublika yoki butun viloyat; serverga null ketadi */
+    derive: (v) => ({
+      ...v,
+      login: String(v.login || '').trim().toLowerCase(),
+      region: v.region || null,
+      district: (v.region && v.district) || null,
+    }),
+    toForm: (r) => ({ ...r, region: r.region || '', district: r.district || '' }),
+    defaults: () => ({ status: 'Faol', role: db.roles[0]?.name, region: '', district: '' }),
     fields: [
       { key: 'name', label: 'F.I.Sh', type: 'text', required: true, span: 2, placeholder: 'A. Karimov' },
       {
@@ -158,6 +171,15 @@ export const schemas = {
       },
       { key: 'status', label: 'Holati', type: 'select', options: opt(['Faol', 'Bloklangan']) },
       { key: 'role', label: 'Roli', type: 'select', required: true, options: roleOpts, span: 2 },
+      {
+        key: 'region', label: 'Viloyat', type: 'select', options: regionOptsAll,
+        empty: '— Respublika (barcha hududlar) —',
+      },
+      {
+        key: 'district', label: 'Tuman / shahar', type: 'select', options: districtOptsOf,
+        empty: '— Butun viloyat —', dependsOn: 'region',
+        hint: 'bo‘sh qolsa — butun viloyatga biriktiriladi',
+      },
       { key: 'unit', label: 'Tashkilot / bo‘lim', type: 'text', span: 2 },
       { key: 'phone', label: 'Telefon', type: 'text', placeholder: '+998 71 200-10-01' },
       {

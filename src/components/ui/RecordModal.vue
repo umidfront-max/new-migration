@@ -30,7 +30,8 @@ const formEl = ref(null)
 const revealed = ref({})
 
 const optionsOf = (f) => {
-  const list = typeof f.options === 'function' ? f.options() : f.options || []
+  /* Variantlar funksiyasi formani oladi — bog'liq tanlovlar uchun (viloyat → tuman) */
+  const list = typeof f.options === 'function' ? f.options(form.value) : f.options || []
   /* Ro'yxatda yo'q eski qiymat ham tanlovda ko'rinib tursin */
   const current = form.value[f.key]
   if (f.create && current && !list.some((o) => o.value === current)) {
@@ -43,6 +44,13 @@ const optionsOf = (f) => {
    `create` ko'rsatilgan select yonida "+" tugmasi chiqadi: u shu to'plam
    uchun ichki oyna ochadi, saqlangan yozuv nomi maydonga darhol tushadi. */
 const creating = ref(null)
+
+/** Tanlov o'zgarganda unga bog'liq (`dependsOn`) maydonlar tozalanadi */
+const onSelect = (f) => {
+  schema.value.fields
+    .filter((x) => x.dependsOn === f.key)
+    .forEach((x) => { form.value[x.key] = '' })
+}
 
 const onCreated = ({ row }) => {
   form.value[creating.value.key] = row.name
@@ -235,7 +243,7 @@ const destroy = async () => {
               </span>
 
               <span v-if="f.type === 'select'" class="selRow">
-                <select v-model="form[f.key]">
+                <select v-model="form[f.key]" @change="onSelect(f)">
                   <option v-if="f.empty" value="">{{ f.empty }}</option>
                   <option v-for="o in optionsOf(f)" :key="o.value" :value="o.value">{{ o.label }}</option>
                 </select>
